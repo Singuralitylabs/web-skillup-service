@@ -1,0 +1,48 @@
+import type { PostgrestError } from "@supabase/supabase-js";
+import type { SubmissionWithContent, SubmissionWithUser } from "@/app/types";
+import { createServerSupabaseClient } from "./supabase-server";
+
+/**
+ * ユーザーの提出履歴を取得
+ */
+export async function fetchSubmissionsByUserId(userId: number): Promise<{
+  data: SubmissionWithContent[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("submissions")
+    .select("*, content:learning_contents(*)")
+    .eq("user_id", userId)
+    .order("submitted_at", { ascending: false });
+
+  if (error) {
+    console.error("提出履歴取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data: data as SubmissionWithContent[], error: null };
+}
+
+/**
+ * 全ユーザーの提出履歴を取得（管理者用）
+ */
+export async function fetchAllSubmissions(): Promise<{
+  data: SubmissionWithUser[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("submissions")
+    .select("*, user:users(id, display_name, email), content:learning_contents(*)")
+    .order("submitted_at", { ascending: false });
+
+  if (error) {
+    console.error("全提出履歴取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data: data as SubmissionWithUser[], error: null };
+}
