@@ -1,36 +1,113 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Web技術学習支援サービス
 
-## Getting Started
+「AIと学ぶ実践Web技術講座」の学習フェーズを支援するWebアプリケーション。
+受講生向けの学習コンテンツ配信・進捗管理・課題提出機能と、運営向けの管理機能を提供する。
 
-First, run the development server:
+## 主な機能
+
+- **学習コンテンツ配信** — Phase > Week > コンテンツの3階層構造で、動画・テキスト・演習を配信
+- **進捗管理** — コンテンツ単位の完了トグルと、ダッシュボードでの進捗率表示
+- **課題提出** — コード貼り付けまたはURL共有による演習課題の提出
+- **管理機能** — コンテンツCRUD、受講生進捗一覧、提出管理、統計ダッシュボード
+
+## システム構成
+
+本サービスは **シンラボポータルサイト**（認証・ユーザー管理）と連携して動作する。
+
+| サービス | 役割 |
+|:--|:--|
+| シンラボポータルサイト | ログイン、ユーザー登録、承認管理 |
+| 学習支援サービス（本リポジトリ） | 学習コンテンツ配信、進捗管理、課題提出 |
+
+## 技術スタック
+
+| 項目 | 技術 |
+|:--|:--|
+| フレームワーク | Next.js 16 (App Router) |
+| UI | React 19 / Tailwind CSS 4 |
+| 言語 | TypeScript 5 |
+| ランタイム | Bun |
+| バックエンド / DB / 認証 | Supabase (PostgreSQL + Auth + RLS) |
+| コード品質 | Biome |
+| ホスティング | Vercel |
+
+## セットアップ
+
+### 前提条件
+
+- [Bun](https://bun.sh/) がインストール済みであること
+- Supabase プロジェクトが作成済みであること
+
+### 環境変数
+
+`.env.local` を作成し、以下の環境変数を設定する。
+
+```
+NEXT_PUBLIC_SUPABASE_URL=<Supabase プロジェクトURL>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<Supabase Anon Key>
+NEXT_PUBLIC_PORTAL_URL=http://localhost:3001
+SUPABASE_PROJECT_ID=<Supabase プロジェクトID>
+```
+
+### インストール・起動
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+# 依存関係のインストール
+bun install
+
+# データベースマイグレーション（Supabase CLIを使用）
+bunx supabase db push
+
+# 開発サーバー起動
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`http://localhost:3000` でアクセス可能。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 主要なスクリプト
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| コマンド | 説明 |
+|:--|:--|
+| `bun dev` | 開発サーバー起動（Turbopack） |
+| `bun run build` | プロダクションビルド |
+| `bun start` | プロダクションサーバー起動 |
+| `bun run lint` | Biome によるリント |
+| `bun run format` | Biome によるフォーマット |
+| `bun run check` | Biome によるリント + フォーマット |
+| `bun run db:types` | Supabase から TypeScript 型定義を生成 |
 
-## Learn More
+## プロジェクト構成
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+├── (authenticated)/     # 認証必須のページ群
+│   ├── admin/           #   管理者向け画面
+│   ├── learn/           #   学習コンテンツ画面
+│   ├── submissions/     #   提出履歴画面
+│   ├── components/      #   認証済みレイアウト用コンポーネント
+│   └── page.tsx         #   ダッシュボード
+├── api/                 # API Routes
+│   ├── progress/        #   進捗更新
+│   └── submissions/     #   課題提出
+├── components/          # 共通UIコンポーネント
+├── constants/           # 定数定義
+├── providers/           # React Context Providers
+├── services/            # サービスレイヤー
+│   ├── api/             #   Supabase クエリ
+│   └── auth/            #   認証・権限チェック
+└── types/               # TypeScript 型定義
+supabase/
+└── migrations/          # DBマイグレーションSQL
+middleware.ts            # 認証ミドルウェア
+docs/                    # 設計ドキュメント
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ドキュメント
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+詳細な設計情報は `docs/` ディレクトリを参照。
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| ドキュメント | 内容 |
+|:--|:--|
+| [要件定義書](./docs/requirements.md) | プロジェクト概要、機能要件、非機能要件、画面一覧 |
+| [データベース設計書](./docs/database-design.md) | テーブル定義、RLS ポリシー、インデックス、トリガー |
+| [機能設計書](./docs/functional-design.md) | アーキテクチャ、API 仕様、画面設計、コンポーネント設計 |
