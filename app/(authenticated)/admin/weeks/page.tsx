@@ -2,6 +2,17 @@ import { Edit, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { PageTitle } from "@/app/components/PageTitle";
 import { fetchAllWeeks } from "@/app/services/api/admin-server";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default async function AdminWeeksPage() {
   const { data: weeks } = await fetchAllWeeks();
@@ -10,69 +21,81 @@ export default async function AdminWeeksPage() {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <PageTitle title="週管理" description="学習週の作成・編集・削除" />
-        <Link href="/admin/weeks/new" className="btn btn-primary flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          新規作成
-        </Link>
+        <Button asChild>
+          <Link href="/admin/weeks/new">
+            <Plus className="h-4 w-4" />
+            新規作成
+          </Link>
+        </Button>
       </div>
 
       {!weeks || weeks.length === 0 ? (
-        <div className="card p-8 text-center">
-          <p className="text-muted-foreground">週がまだ登録されていません。</p>
-          <Link href="/admin/weeks/new" className="btn btn-primary mt-4">
-            最初の週を作成
-          </Link>
-        </div>
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-muted-foreground">週がまだ登録されていません。</p>
+            <Button asChild className="mt-4">
+              <Link href="/admin/weeks/new">最初の週を作成</Link>
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="card overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">順序</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">フェーズ</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">名前</th>
-                <th className="px-4 py-3 text-center text-sm font-medium">公開</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">操作</th>
-              </tr>
-            </thead>
-            <tbody>
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">順序</TableHead>
+                <TableHead>フェーズ</TableHead>
+                <TableHead>名前</TableHead>
+                <TableHead className="text-center w-16">公開</TableHead>
+                <TableHead className="text-right w-24">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {weeks.map((week) => (
-                <tr key={week.id} className="border-t border-border hover:bg-muted/50">
-                  <td className="px-4 py-3 text-sm">{week.display_order}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                <TableRow key={week.id}>
+                  <TableCell className="text-sm">{week.display_order}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
                     {week.phase?.name || "-"}
-                  </td>
-                  <td className="px-4 py-3 font-medium">{week.name}</td>
-                  <td className="px-4 py-3 text-center">
+                  </TableCell>
+                  <TableCell className="font-medium">{week.name}</TableCell>
+                  <TableCell className="text-center">
                     {week.is_published ? (
-                      <Eye className="h-4 w-4 text-success mx-auto" />
+                      <Badge variant="secondary" className="gap-1 bg-success/10 text-success">
+                        <Eye className="h-3 w-3" />
+                        公開
+                      </Badge>
                     ) : (
-                      <EyeOff className="h-4 w-4 text-muted-foreground mx-auto" />
+                      <Badge variant="secondary" className="gap-1">
+                        <EyeOff className="h-3 w-3" />
+                        非公開
+                      </Badge>
                     )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link
-                        href={`/admin/weeks/${week.id}/edit`}
-                        className="btn btn-ghost p-2"
-                        title="編集"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Link>
-                      <Link
-                        href={`/admin/weeks/${week.id}/delete`}
-                        className="btn btn-ghost p-2 text-destructive"
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button variant="ghost" size="icon-sm" asChild title="編集">
+                        <Link href={`/admin/weeks/${week.id}/edit`}>
+                          <Edit className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        asChild
                         title="削除"
+                        className="text-destructive hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Link>
+                        <Link href={`/admin/weeks/${week.id}/delete`}>
+                          <Trash2 className="h-4 w-4" />
+                        </Link>
+                      </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   );

@@ -1,6 +1,8 @@
 "use client";
 
 import YouTube, { type YouTubeProps } from "react-youtube";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface YouTubeEmbedProps {
   url: string;
@@ -8,10 +10,6 @@ interface YouTubeEmbedProps {
 }
 
 function extractVideoId(url: string): string | null {
-  // 対応パターン:
-  // - https://www.youtube.com/watch?v=VIDEO_ID
-  // - https://youtu.be/VIDEO_ID
-  // - https://www.youtube.com/embed/VIDEO_ID
   const patterns = [/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/];
 
   for (const pattern of patterns) {
@@ -29,10 +27,12 @@ export function YouTubeEmbed({ url, className }: YouTubeEmbedProps) {
 
   if (!videoId) {
     return (
-      <div className={`bg-muted rounded-lg p-8 text-center ${className}`}>
-        <p className="text-muted-foreground">動画を読み込めませんでした</p>
-        <p className="text-sm text-muted-foreground mt-2">URL: {url}</p>
-      </div>
+      <Card className={cn("bg-muted", className)}>
+        <CardContent className="p-8 text-center">
+          <p className="text-muted-foreground">動画を読み込めませんでした</p>
+          <p className="text-sm text-muted-foreground mt-2">URL: {url}</p>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -47,12 +47,12 @@ export function YouTubeEmbed({ url, className }: YouTubeEmbedProps) {
   };
 
   return (
-    <div className={`aspect-video w-full ${className}`}>
+    <div className={cn("aspect-video w-full", className)}>
       <YouTube
         videoId={videoId}
         opts={opts}
         className="w-full h-full"
-        iframeClassName="w-full h-full rounded-lg"
+        iframeClassName="w-full h-full rounded-xl"
       />
     </div>
   );

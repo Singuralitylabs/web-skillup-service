@@ -3,6 +3,11 @@
 import { Code, Link as LinkIcon, Loader2, Send } from "lucide-react";
 import { useState } from "react";
 import type { SubmissionType } from "@/app/types";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface SubmissionFormProps {
   contentId: number;
@@ -88,29 +93,24 @@ export function SubmissionForm({ contentId, userId }: SubmissionFormProps) {
 
       {/* 入力フィールド */}
       {submissionType === "code" ? (
-        <div>
-          <label htmlFor="code" className="label block mb-2">
-            コード
-          </label>
-          <textarea
+        <div className="space-y-2">
+          <Label htmlFor="code">コード</Label>
+          <Textarea
             id="code"
             value={codeContent}
             onChange={(e) => setCodeContent(e.target.value)}
-            className="textarea font-mono min-h-[200px]"
+            className="font-mono min-h-[200px]"
             placeholder="ここにコードを貼り付けてください..."
           />
         </div>
       ) : (
-        <div>
-          <label htmlFor="url" className="label block mb-2">
-            URL
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="url">URL</Label>
+          <Input
             type="url"
             id="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="input"
             placeholder="https://..."
           />
         </div>
@@ -118,23 +118,15 @@ export function SubmissionForm({ contentId, userId }: SubmissionFormProps) {
 
       {/* メッセージ */}
       {message && (
-        <div
-          className={`p-3 rounded-lg text-sm ${
-            message.type === "success"
-              ? "bg-success/10 text-success"
-              : "bg-destructive/10 text-destructive"
-          }`}
-        >
-          {message.text}
-        </div>
+        <Alert variant={message.type === "error" ? "destructive" : "default"}>
+          <AlertDescription className={message.type === "success" ? "text-success" : ""}>
+            {message.text}
+          </AlertDescription>
+        </Alert>
       )}
 
       {/* 提出ボタン */}
-      <button
-        type="submit"
-        disabled={!isValid || isLoading}
-        className="btn btn-primary w-full flex items-center justify-center gap-2"
-      >
+      <Button type="submit" disabled={!isValid || isLoading} className="w-full">
         {isLoading ? (
           <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
@@ -143,7 +135,7 @@ export function SubmissionForm({ contentId, userId }: SubmissionFormProps) {
             提出する
           </>
         )}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -16,15 +16,15 @@ export function PageTitle({ title, breadcrumbs, description }: PageTitleProps) {
   return (
     <div className="mb-6">
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
-          <Link href="/" className="hover:text-foreground flex items-center">
+        <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
+          <Link href="/" className="hover:text-foreground flex items-center transition-colors">
             <Home className="h-4 w-4" />
           </Link>
-          {breadcrumbs.map((item, index) => (
+          {breadcrumbs.map((item) => (
             <span key={item.label} className="flex items-center gap-1">
               <ChevronRight className="h-4 w-4" />
               {item.href ? (
-                <Link href={item.href} className="hover:text-foreground">
+                <Link href={item.href} className="hover:text-foreground transition-colors">
                   {item.label}
                 </Link>
               ) : (
@@ -34,7 +34,7 @@ export function PageTitle({ title, breadcrumbs, description }: PageTitleProps) {
           ))}
         </nav>
       )}
-      <h1 className="text-2xl font-bold">{title}</h1>
+      <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
       {description && <p className="text-muted-foreground mt-1">{description}</p>}
     </div>
   );

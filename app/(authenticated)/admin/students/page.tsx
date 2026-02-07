@@ -1,6 +1,16 @@
 import { Users } from "lucide-react";
 import { PageTitle } from "@/app/components/PageTitle";
 import { fetchStudentsProgress } from "@/app/services/api/admin-server";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 function formatDate(dateString: string | null) {
   if (!dateString) return "-";
@@ -19,22 +29,24 @@ export default async function AdminStudentsPage() {
       <PageTitle title="受講生進捗" description="受講生の学習進捗状況" />
 
       {!students || students.length === 0 ? (
-        <div className="card p-8 text-center">
-          <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">受講生がまだいません。</p>
-        </div>
+        <Card>
+          <CardContent className="py-8 text-center">
+            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">受講生がまだいません。</p>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="card overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-muted">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">名前</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">メール</th>
-                <th className="px-4 py-3 text-center text-sm font-medium">進捗</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">最終アクティビティ</th>
-              </tr>
-            </thead>
-            <tbody>
+        <Card className="overflow-x-auto">
+          <Table className="min-w-[700px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead>名前</TableHead>
+                <TableHead>メール</TableHead>
+                <TableHead className="text-center">進捗</TableHead>
+                <TableHead className="text-right">最終アクティビティ</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {students.map((student) => {
                 const progress =
                   student.totalContents > 0
@@ -42,30 +54,28 @@ export default async function AdminStudentsPage() {
                     : 0;
 
                 return (
-                  <tr key={student.user.id} className="border-t border-border hover:bg-muted/50">
-                    <td className="px-4 py-3 font-medium">{student.user.display_name}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
+                  <TableRow key={student.user.id}>
+                    <TableCell className="font-medium">{student.user.display_name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
                       {student.user.email}
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="flex-1 progress-bar">
-                          <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
-                        </div>
+                        <Progress value={progress} className="flex-1" />
                         <span className="text-sm text-muted-foreground w-16 text-right">
                           {student.completedContents}/{student.totalContents}
                         </span>
                       </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground text-right">
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground text-right">
                       {formatDate(student.lastActivity)}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   );

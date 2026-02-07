@@ -3,6 +3,9 @@ import Link from "next/link";
 import { createServerSupabaseClient } from "@/app/services/api/supabase-server";
 import { getServerAuth } from "@/app/services/auth/server-auth";
 import type { LearningPhase } from "@/app/types";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface PhaseWithProgress {
   phase: LearningPhase;
@@ -17,7 +20,6 @@ async function getProgressSummary(userId: number): Promise<{
 }> {
   const supabase = await createServerSupabaseClient();
 
-  // フェーズ一覧を取得
   const { data: phases, error: phasesError } = await supabase
     .from("learning_phases")
     .select("*")
@@ -29,10 +31,8 @@ async function getProgressSummary(userId: number): Promise<{
     return { phases: [], totalContents: 0, completedContents: 0 };
   }
 
-  // 各フェーズの進捗を計算
   const phasesWithProgress: PhaseWithProgress[] = await Promise.all(
     phases.map(async (phase) => {
-      // フェーズに属するコンテンツ数を取得
       const { count: totalContents } = await supabase
         .from("learning_contents")
         .select("id", { count: "exact", head: true })
@@ -50,7 +50,6 @@ async function getProgressSummary(userId: number): Promise<{
           ).data?.map((w) => w.id) || []
         );
 
-      // 完了したコンテンツ数を取得
       const { count: completedContents } = await supabase
         .from("user_progress")
         .select("id", { count: "exact", head: true })
@@ -98,7 +97,7 @@ export default async function HomePage() {
   if (!userId) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <p>ユーザー情報を読み込み中...</p>
+        <p className="text-muted-foreground">ユーザー情報を読み込み中...</p>
       </div>
     );
   }
@@ -109,26 +108,26 @@ export default async function HomePage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">ダッシュボード</h1>
+      <h1 className="text-3xl font-bold tracking-tight mb-6">ダッシュボード</h1>
 
       {/* 全体進捗 */}
-      <div className="card p-6 mb-6">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 bg-primary/10 rounded-full">
-            <TrendingUp className="h-6 w-6 text-primary" />
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-3 bg-primary/10 rounded-full">
+              <TrendingUp className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">学習進捗</h2>
+              <p className="text-sm text-muted-foreground">
+                {completedContents} / {totalContents} コンテンツ完了
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold">学習進捗</h2>
-            <p className="text-sm text-muted-foreground">
-              {completedContents} / {totalContents} コンテンツ完了
-            </p>
-          </div>
-        </div>
-        <div className="progress-bar">
-          <div className="progress-bar-fill" style={{ width: `${overallProgress}%` }} />
-        </div>
-        <p className="text-right text-sm text-muted-foreground mt-2">{overallProgress}%</p>
-      </div>
+          <Progress value={overallProgress} className="h-2" />
+          <p className="text-right text-sm text-muted-foreground mt-2">{overallProgress}%</p>
+        </CardContent>
+      </Card>
 
       {/* フェーズ一覧 */}
       <div className="grid gap-4">
@@ -138,9 +137,11 @@ export default async function HomePage() {
         </h2>
 
         {phases.length === 0 ? (
-          <div className="card p-6 text-center text-muted-foreground">
-            <p>学習コンテンツはまだ登録されていません。</p>
-          </div>
+          <Card>
+            <CardContent className="py-8 text-center text-muted-foreground">
+              <p>学習コンテンツはまだ登録されていません。</p>
+            </CardContent>
+          </Card>
         ) : (
           phases.map(({ phase, totalContents, completedContents }) => {
             const progress =
@@ -148,32 +149,34 @@ export default async function HomePage() {
             const isCompleted = totalContents > 0 && completedContents === totalContents;
 
             return (
-              <Link
-                key={phase.id}
-                href={`/learn/${phase.id}`}
-                className="card p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    {isCompleted ? (
-                      <CheckCircle className="h-5 w-5 text-success" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-muted-foreground" />
+              <Link key={phase.id} href={`/learn/${phase.id}`} className="block group">
+                <Card
+                  className={`transition-all hover:shadow-md hover:border-primary/20 ${isCompleted ? "border-l-4 border-l-success" : ""}`}
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        {isCompleted ? (
+                          <CheckCircle className="h-5 w-5 text-success" />
+                        ) : (
+                          <Clock className="h-5 w-5 text-muted-foreground" />
+                        )}
+                        <h3 className="font-medium group-hover:text-primary transition-colors">
+                          {phase.name}
+                        </h3>
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {completedContents} / {totalContents}
+                      </span>
+                    </div>
+                    {phase.description && (
+                      <p className="text-sm text-muted-foreground mb-3 ml-8">{phase.description}</p>
                     )}
-                    <h3 className="font-medium">{phase.name}</h3>
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {completedContents} / {totalContents}
-                  </span>
-                </div>
-                {phase.description && (
-                  <p className="text-sm text-muted-foreground mb-3 ml-8">{phase.description}</p>
-                )}
-                <div className="ml-8">
-                  <div className="progress-bar">
-                    <div className="progress-bar-fill" style={{ width: `${progress}%` }} />
-                  </div>
-                </div>
+                    <div className="ml-8">
+                      <Progress value={progress} className="h-2" />
+                    </div>
+                  </CardContent>
+                </Card>
               </Link>
             );
           })
@@ -183,9 +186,9 @@ export default async function HomePage() {
       {/* 学習を始めるボタン */}
       {phases.length > 0 && (
         <div className="mt-6 text-center">
-          <Link href="/learn" className="btn btn-primary">
-            学習を始める
-          </Link>
+          <Button asChild>
+            <Link href="/learn">学習を始める</Link>
+          </Button>
         </div>
       )}
     </div>

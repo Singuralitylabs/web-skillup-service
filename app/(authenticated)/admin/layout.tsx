@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { checkAdminPermissions } from "@/app/services/auth/permissions";
 import { getServerAuth } from "@/app/services/auth/server-auth";
+import { Separator } from "@/components/ui/separator";
 
 const ADMIN_NAV_ITEMS = [
   { title: "ダッシュボード", href: "/admin", icon: LayoutDashboard },
@@ -24,18 +25,19 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div>
       {/* 管理画面ナビゲーション */}
       <nav className="mb-6 overflow-x-auto">
-        <div className="flex gap-2 pb-2">
+        <div className="flex gap-1 pb-2">
           {ADMIN_NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="btn btn-ghost flex items-center gap-2 whitespace-nowrap"
+              className="flex items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
               <item.icon className="h-4 w-4" />
               {item.title}
             </Link>
           ))}
         </div>
+        <Separator />
       </nav>
 
       {children}

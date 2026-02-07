@@ -9,6 +9,9 @@ import {
 } from "@/app/services/api/learning-server";
 import { getServerAuth } from "@/app/services/auth/server-auth";
 import type { ContentType } from "@/app/types";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface PageProps {
   params: Promise<{ phaseId: string; weekId: string }>;
@@ -17,13 +20,13 @@ interface PageProps {
 function getContentIcon(type: ContentType) {
   switch (type) {
     case "video":
-      return <Play className="h-5 w-5" />;
+      return <Play className="h-4 w-4" />;
     case "text":
-      return <FileText className="h-5 w-5" />;
+      return <FileText className="h-4 w-4" />;
     case "exercise":
-      return <PenLine className="h-5 w-5" />;
+      return <PenLine className="h-4 w-4" />;
     default:
-      return <FileText className="h-5 w-5" />;
+      return <FileText className="h-4 w-4" />;
   }
 }
 
@@ -59,7 +62,6 @@ export default async function WeekPage({ params }: PageProps) {
     notFound();
   }
 
-  // 進捗を取得
   const contentIds = contents?.map((c) => c.id) || [];
   const { data: progressMap } = userId
     ? await fetchUserProgressByContentIds(userId, contentIds)
@@ -67,6 +69,7 @@ export default async function WeekPage({ params }: PageProps) {
 
   const completedCount = Array.from(progressMap.values()).filter(Boolean).length;
   const totalCount = contents?.length || 0;
+  const progressValue = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -81,32 +84,25 @@ export default async function WeekPage({ params }: PageProps) {
       />
 
       {/* 進捗サマリー */}
-      <div className="card p-4 mb-6">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            進捗: {completedCount} / {totalCount} 完了
-          </span>
-          <div className="flex-1 mx-4">
-            <div className="progress-bar">
-              <div
-                className="progress-bar-fill"
-                style={{
-                  width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%`,
-                }}
-              />
-            </div>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-muted-foreground">
+              進捗: {completedCount} / {totalCount} 完了
+            </span>
+            <span className="text-sm font-medium">{progressValue}%</span>
           </div>
-          <span className="text-sm font-medium">
-            {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
-          </span>
-        </div>
-      </div>
+          <Progress value={progressValue} className="h-2" />
+        </CardContent>
+      </Card>
 
       {!contents || contents.length === 0 ? (
-        <div className="card p-8 text-center">
-          <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">この週にはまだコンテンツが登録されていません。</p>
-        </div>
+        <Card>
+          <CardContent className="py-8 text-center">
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">この週にはまだコンテンツが登録されていません。</p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-3">
           {contents.map((content) => {
@@ -116,35 +112,41 @@ export default async function WeekPage({ params }: PageProps) {
               <Link
                 key={content.id}
                 href={`/learn/${phaseIdNum}/${weekIdNum}/${content.id}`}
-                className="card p-4 hover:shadow-md transition-shadow group"
+                className="block group"
               >
-                <div className="flex items-center gap-4">
-                  {/* 完了状態 */}
-                  <div
-                    className={`p-2 rounded-full ${
-                      isCompleted ? "bg-success/10 text-success" : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {isCompleted ? (
-                      <CheckCircle className="h-5 w-5" />
-                    ) : (
-                      <Clock className="h-5 w-5" />
-                    )}
-                  </div>
+                <Card
+                  className={`transition-all hover:shadow-md hover:border-primary/20 ${isCompleted ? "border-l-4 border-l-success" : ""}`}
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className={`p-2 rounded-full ${
+                          isCompleted
+                            ? "bg-success/10 text-success"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle className="h-5 w-5" />
+                        ) : (
+                          <Clock className="h-5 w-5" />
+                        )}
+                      </div>
 
-                  {/* コンテンツ情報 */}
-                  <div className="flex-1">
-                    <h3 className="font-medium group-hover:text-primary transition-colors">
-                      {content.title}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                        {getContentIcon(content.content_type)}
-                        {getContentTypeLabel(content.content_type)}
-                      </span>
+                      <div className="flex-1">
+                        <h3 className="font-medium group-hover:text-primary transition-colors">
+                          {content.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="gap-1">
+                            {getContentIcon(content.content_type)}
+                            {getContentTypeLabel(content.content_type)}
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               </Link>
             );
           })}

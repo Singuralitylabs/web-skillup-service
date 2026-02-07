@@ -3,17 +3,28 @@ import Link from "next/link";
 import { PageTitle } from "@/app/components/PageTitle";
 import { fetchAllContents } from "@/app/services/api/admin-server";
 import type { ContentType } from "@/app/types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 function getContentIcon(type: ContentType) {
   switch (type) {
     case "video":
-      return <Play className="h-4 w-4" />;
+      return <Play className="h-3 w-3" />;
     case "text":
-      return <FileText className="h-4 w-4" />;
+      return <FileText className="h-3 w-3" />;
     case "exercise":
-      return <PenLine className="h-4 w-4" />;
+      return <PenLine className="h-3 w-3" />;
     default:
-      return <FileText className="h-4 w-4" />;
+      return <FileText className="h-3 w-3" />;
   }
 }
 
@@ -37,82 +48,94 @@ export default async function AdminContentsPage() {
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <PageTitle title="コンテンツ管理" description="学習コンテンツの作成・編集・削除" />
-        <Link href="/admin/contents/new" className="btn btn-primary flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          新規作成
-        </Link>
+        <Button asChild>
+          <Link href="/admin/contents/new">
+            <Plus className="h-4 w-4" />
+            新規作成
+          </Link>
+        </Button>
       </div>
 
       {!contents || contents.length === 0 ? (
-        <div className="card p-8 text-center">
-          <p className="text-muted-foreground">コンテンツがまだ登録されていません。</p>
-          <Link href="/admin/contents/new" className="btn btn-primary mt-4">
-            最初のコンテンツを作成
-          </Link>
-        </div>
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-muted-foreground">コンテンツがまだ登録されていません。</p>
+            <Button asChild className="mt-4">
+              <Link href="/admin/contents/new">最初のコンテンツを作成</Link>
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="card overflow-hidden overflow-x-auto">
-          <table className="w-full min-w-[800px]">
-            <thead className="bg-muted">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">順序</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">タイトル</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">種類</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">週</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">フェーズ</th>
-                <th className="px-4 py-3 text-center text-sm font-medium">公開</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">操作</th>
-              </tr>
-            </thead>
-            <tbody>
+        <Card className="overflow-x-auto">
+          <Table className="min-w-[800px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-16">順序</TableHead>
+                <TableHead>タイトル</TableHead>
+                <TableHead className="w-24">種類</TableHead>
+                <TableHead>週</TableHead>
+                <TableHead>フェーズ</TableHead>
+                <TableHead className="text-center w-20">公開</TableHead>
+                <TableHead className="text-right w-24">操作</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {contents.map((content) => (
-                <tr key={content.id} className="border-t border-border hover:bg-muted/50">
-                  <td className="px-4 py-3 text-sm">{content.display_order}</td>
-                  <td className="px-4 py-3 font-medium">
+                <TableRow key={content.id}>
+                  <TableCell className="text-sm">{content.display_order}</TableCell>
+                  <TableCell className="font-medium">
                     <span className="line-clamp-1">{content.title}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center gap-1 text-sm bg-muted px-2 py-1 rounded">
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="gap-1">
                       {getContentIcon(content.content_type)}
                       {getContentTypeLabel(content.content_type)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
                     {content.week?.name || "-"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
                     {content.week?.phase?.name || "-"}
-                  </td>
-                  <td className="px-4 py-3 text-center">
+                  </TableCell>
+                  <TableCell className="text-center">
                     {content.is_published ? (
-                      <Eye className="h-4 w-4 text-success mx-auto" />
+                      <Badge variant="secondary" className="gap-1 bg-success/10 text-success">
+                        <Eye className="h-3 w-3" />
+                        公開
+                      </Badge>
                     ) : (
-                      <EyeOff className="h-4 w-4 text-muted-foreground mx-auto" />
+                      <Badge variant="secondary" className="gap-1">
+                        <EyeOff className="h-3 w-3" />
+                        非公開
+                      </Badge>
                     )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link
-                        href={`/admin/contents/${content.id}/edit`}
-                        className="btn btn-ghost p-2"
-                        title="編集"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Link>
-                      <Link
-                        href={`/admin/contents/${content.id}/delete`}
-                        className="btn btn-ghost p-2 text-destructive"
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button variant="ghost" size="icon-sm" asChild title="編集">
+                        <Link href={`/admin/contents/${content.id}/edit`}>
+                          <Edit className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        asChild
                         title="削除"
+                        className="text-destructive hover:text-destructive"
                       >
-                        <Trash2 className="h-4 w-4" />
-                      </Link>
+                        <Link href={`/admin/contents/${content.id}/delete`}>
+                          <Trash2 className="h-4 w-4" />
+                        </Link>
+                      </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </Card>
       )}
     </div>
   );
