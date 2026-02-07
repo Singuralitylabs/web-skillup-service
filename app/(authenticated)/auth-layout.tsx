@@ -7,6 +7,7 @@ import { fetchUserStatusById } from "@/app/services/api/users-client";
 import type { UserStatusType } from "@/app/types";
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || "http://localhost:3001";
+const SKIP_AUTH = process.env.NEXT_PUBLIC_SKIP_AUTH === "true";
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useSupabaseAuth();
@@ -14,6 +15,13 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   const [statusLoading, setStatusLoading] = useState(true);
 
   useEffect(() => {
+    // ポータル連携前は認証スキップ
+    // TODO: ポータルサービス連携時に削除すること
+    if (SKIP_AUTH) {
+      setStatusLoading(false);
+      return;
+    }
+
     if (loading) return;
 
     if (!user) {
@@ -69,6 +77,11 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
     );
+  }
+
+  // SKIP_AUTH時は認証なしでコンテンツ表示
+  if (SKIP_AUTH) {
+    return <>{children}</>;
   }
 
   // 認証済みかつactiveな場合のみコンテンツを表示

@@ -12,6 +12,17 @@ export interface ServerAuthResult {
 
 // サーバーサイドで認証とユーザーステータスを確認
 export async function getServerAuth(): Promise<ServerAuthResult> {
+  // ポータル連携前は認証スキップしてダミーユーザーを返す
+  // TODO: ポータルサービス連携時に削除すること
+  if (process.env.SKIP_AUTH === "true") {
+    return {
+      user: null,
+      userId: -1,
+      userStatus: "active" as UserStatusType,
+      userRole: "admin" as UserRoleType,
+    };
+  }
+
   try {
     const supabase = await createServerSupabaseClient();
 

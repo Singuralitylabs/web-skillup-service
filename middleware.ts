@@ -28,6 +28,13 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  // ポータル連携前は認証スキップ（.env.localでSKIP_AUTH=trueを設定）
+  // TODO: ポータルサービス連携時に削除すること
+  if (process.env.SKIP_AUTH === "true") {
+    console.log("[middleware] SKIP_AUTH enabled - skipping auth check");
+    return response;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
