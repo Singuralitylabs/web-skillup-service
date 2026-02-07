@@ -86,7 +86,7 @@ app/
 
 `.env.local` に設定が必要（`.env.local.example` 参照）:
 - `NEXT_PUBLIC_SUPABASE_URL` — SupabaseプロジェクトURL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — Supabase匿名キー
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` — Supabase Publishableキー
 - `SUPABASE_PROJECT_ID` — Supabase CLI操作用
 - `NEXT_PUBLIC_PORTAL_URL` — ポータルサービスURL（デフォルト: `http://localhost:3001`）
 

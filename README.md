@@ -44,7 +44,7 @@
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=<Supabase プロジェクトURL>
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<Supabase Anon Key>
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<Supabase Publishable Key>
 NEXT_PUBLIC_PORTAL_URL=http://localhost:3001
 SUPABASE_PROJECT_ID=<Supabase プロジェクトID>
 ```
