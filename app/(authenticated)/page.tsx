@@ -1,94 +1,104 @@
 import { BookOpen, CheckCircle, Clock, TrendingUp } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/app/services/api/supabase-server";
 import { getServerAuth } from "@/app/services/auth/server-auth";
-import type { LearningPhase } from "@/app/types";
+import type { LearningTheme } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
-interface PhaseWithProgress {
-  phase: LearningPhase;
+interface ThemeWithProgress {
+  theme: LearningTheme;
   totalContents: number;
   completedContents: number;
 }
 
-async function getProgressSummary(userId: number): Promise<{
-  phases: PhaseWithProgress[];
+async function getThemeProgressSummary(userId: number): Promise<{
+  themes: ThemeWithProgress[];
   totalContents: number;
   completedContents: number;
 }> {
   const supabase = await createServerSupabaseClient();
 
-  const { data: phases, error: phasesError } = await supabase
-    .from("learning_phases")
+  const { data: themes, error: themesError } = await supabase
+    .from("learning_themes")
     .select("*")
     .eq("is_published", true)
     .eq("is_deleted", false)
     .order("display_order");
 
-  if (phasesError || !phases) {
-    return { phases: [], totalContents: 0, completedContents: 0 };
+  if (themesError || !themes) {
+    return { themes: [], totalContents: 0, completedContents: 0 };
   }
 
-  const phasesWithProgress: PhaseWithProgress[] = await Promise.all(
-    phases.map(async (phase) => {
+  const themesWithProgress: ThemeWithProgress[] = await Promise.all(
+    themes.map(async (theme) => {
+      const { data: phases } = await supabase
+        .from("learning_phases")
+        .select("id")
+        .eq("theme_id", theme.id)
+        .eq("is_published", true)
+        .eq("is_deleted", false);
+
+      const phaseIds = phases?.map((p) => p.id) || [];
+
+      if (phaseIds.length === 0) {
+        return { theme, totalContents: 0, completedContents: 0 };
+      }
+
+      const { data: weeks } = await supabase
+        .from("learning_weeks")
+        .select("id")
+        .in("phase_id", phaseIds)
+        .eq("is_published", true)
+        .eq("is_deleted", false);
+
+      const weekIds = weeks?.map((w) => w.id) || [];
+
+      if (weekIds.length === 0) {
+        return { theme, totalContents: 0, completedContents: 0 };
+      }
+
       const { count: totalContents } = await supabase
         .from("learning_contents")
         .select("id", { count: "exact", head: true })
+        .in("week_id", weekIds)
         .eq("is_published", true)
-        .eq("is_deleted", false)
-        .in(
-          "week_id",
-          (
-            await supabase
-              .from("learning_weeks")
-              .select("id")
-              .eq("phase_id", phase.id)
-              .eq("is_published", true)
-              .eq("is_deleted", false)
-          ).data?.map((w) => w.id) || []
-        );
+        .eq("is_deleted", false);
+
+      const { data: contentIds } = await supabase
+        .from("learning_contents")
+        .select("id")
+        .in("week_id", weekIds)
+        .eq("is_published", true)
+        .eq("is_deleted", false);
+
+      const ids = contentIds?.map((c) => c.id) || [];
+
+      if (ids.length === 0) {
+        return { theme, totalContents: totalContents || 0, completedContents: 0 };
+      }
 
       const { count: completedContents } = await supabase
         .from("user_progress")
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId)
         .eq("is_completed", true)
-        .in(
-          "content_id",
-          (
-            await supabase
-              .from("learning_contents")
-              .select("id")
-              .eq("is_published", true)
-              .eq("is_deleted", false)
-              .in(
-                "week_id",
-                (
-                  await supabase
-                    .from("learning_weeks")
-                    .select("id")
-                    .eq("phase_id", phase.id)
-                    .eq("is_published", true)
-                    .eq("is_deleted", false)
-                ).data?.map((w) => w.id) || []
-              )
-          ).data?.map((c) => c.id) || []
-        );
+        .in("content_id", ids);
 
       return {
-        phase,
+        theme,
         totalContents: totalContents || 0,
         completedContents: completedContents || 0,
       };
     })
   );
 
-  const totalContents = phasesWithProgress.reduce((sum, p) => sum + p.totalContents, 0);
-  const completedContents = phasesWithProgress.reduce((sum, p) => sum + p.completedContents, 0);
+  const totalContents = themesWithProgress.reduce((sum, t) => sum + t.totalContents, 0);
+  const completedContents = themesWithProgress.reduce((sum, t) => sum + t.completedContents, 0);
 
-  return { phases: phasesWithProgress, totalContents, completedContents };
+  return { themes: themesWithProgress, totalContents, completedContents };
 }
 
 export default async function HomePage() {
@@ -102,7 +112,7 @@ export default async function HomePage() {
     );
   }
 
-  const { phases, totalContents, completedContents } = await getProgressSummary(userId);
+  const { themes, totalContents, completedContents } = await getThemeProgressSummary(userId);
   const overallProgress =
     totalContents > 0 ? Math.round((completedContents / totalContents) * 100) : 0;
 
@@ -129,53 +139,74 @@ export default async function HomePage() {
         </CardContent>
       </Card>
 
-      {/* フェーズ一覧 */}
+      {/* テーマ一覧 */}
       <div className="grid gap-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <BookOpen className="h-5 w-5" />
-          学習フェーズ
+          学習テーマ
         </h2>
 
-        {phases.length === 0 ? (
+        {themes.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
               <p>学習コンテンツはまだ登録されていません。</p>
             </CardContent>
           </Card>
         ) : (
-          phases.map(({ phase, totalContents, completedContents }) => {
+          themes.map(({ theme, totalContents, completedContents }) => {
             const progress =
               totalContents > 0 ? Math.round((completedContents / totalContents) * 100) : 0;
             const isCompleted = totalContents > 0 && completedContents === totalContents;
 
             return (
-              <Link key={phase.id} href={`/learn/${phase.id}`} className="block group">
+              <Link key={theme.id} href={`/learn/${theme.id}`} className="block group">
                 <Card
-                  className={`transition-all hover:shadow-md hover:border-primary/20 ${isCompleted ? "border-l-4 border-l-success" : ""}`}
+                  className={`overflow-hidden transition-all hover:shadow-md hover:border-primary/20 ${isCompleted ? "border-l-4 border-l-success" : ""}`}
                 >
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        {isCompleted ? (
-                          <CheckCircle className="h-5 w-5 text-success" />
-                        ) : (
-                          <Clock className="h-5 w-5 text-muted-foreground" />
-                        )}
-                        <h3 className="font-medium group-hover:text-primary transition-colors">
-                          {phase.name}
-                        </h3>
+                  <div className="flex">
+                    {/* サムネイル */}
+                    <div className="relative w-24 shrink-0 bg-gradient-to-br from-primary/5 to-primary/15">
+                      {theme.image_url ? (
+                        <Image
+                          src={theme.image_url}
+                          alt={theme.name}
+                          fill
+                          className="object-cover"
+                          sizes="96px"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <BookOpen className="h-8 w-8 text-primary/30" />
+                        </div>
+                      )}
+                    </div>
+
+                    <CardContent className="pt-4 pb-4 flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isCompleted ? (
+                            <CheckCircle className="h-4 w-4 text-success shrink-0" />
+                          ) : (
+                            <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+                          )}
+                          <h3 className="font-medium group-hover:text-primary transition-colors truncate">
+                            {theme.name}
+                          </h3>
+                        </div>
+                        <span className="text-sm text-muted-foreground shrink-0 ml-2">
+                          {completedContents} / {totalContents}
+                        </span>
                       </div>
-                      <span className="text-sm text-muted-foreground">
-                        {completedContents} / {totalContents}
-                      </span>
-                    </div>
-                    {phase.description && (
-                      <p className="text-sm text-muted-foreground mb-3 ml-8">{phase.description}</p>
-                    )}
-                    <div className="ml-8">
-                      <Progress value={progress} className="h-2" />
-                    </div>
-                  </CardContent>
+                      {theme.description && (
+                        <p className="text-sm text-muted-foreground mb-2 ml-6 line-clamp-1">
+                          {theme.description}
+                        </p>
+                      )}
+                      <div className="ml-6">
+                        <Progress value={progress} className="h-2" />
+                      </div>
+                    </CardContent>
+                  </div>
                 </Card>
               </Link>
             );
@@ -184,7 +215,7 @@ export default async function HomePage() {
       </div>
 
       {/* 学習を始めるボタン */}
-      {phases.length > 0 && (
+      {themes.length > 0 && (
         <div className="mt-6 text-center">
           <Button asChild>
             <Link href="/learn">学習を始める</Link>

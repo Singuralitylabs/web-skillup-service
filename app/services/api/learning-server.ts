@@ -3,9 +3,84 @@ import type {
   LearningContent,
   LearningContentWithWeek,
   LearningPhase,
+  LearningTheme,
   LearningWeek,
 } from "@/app/types";
 import { createServerSupabaseClient } from "./supabase-server";
+
+/**
+ * 公開テーマ一覧を取得
+ */
+export async function fetchPublishedThemes(): Promise<{
+  data: LearningTheme[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("learning_themes")
+    .select("*")
+    .eq("is_published", true)
+    .eq("is_deleted", false)
+    .order("display_order");
+
+  if (error) {
+    console.error("テーマ一覧取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+}
+
+/**
+ * テーマ詳細を取得
+ */
+export async function fetchThemeById(themeId: number): Promise<{
+  data: LearningTheme | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("learning_themes")
+    .select("*")
+    .eq("id", themeId)
+    .eq("is_published", true)
+    .eq("is_deleted", false)
+    .single();
+
+  if (error) {
+    console.error("テーマ詳細取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+}
+
+/**
+ * テーマに属する公開フェーズ一覧を取得
+ */
+export async function fetchPhasesByThemeId(themeId: number): Promise<{
+  data: LearningPhase[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("learning_phases")
+    .select("*")
+    .eq("theme_id", themeId)
+    .eq("is_published", true)
+    .eq("is_deleted", false)
+    .order("display_order");
+
+  if (error) {
+    console.error("テーマ別フェーズ一覧取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+}
 
 /**
  * 公開フェーズ一覧を取得
@@ -82,17 +157,21 @@ export async function fetchWeeksByPhaseId(phaseId: number): Promise<{
 }
 
 /**
- * 週詳細を取得（フェーズ情報付き）
+ * 週詳細を取得（フェーズ・テーマ情報付き）
  */
 export async function fetchWeekById(weekId: number): Promise<{
-  data: (LearningWeek & { phase: LearningPhase | null }) | null;
+  data:
+    | (LearningWeek & {
+        phase: (LearningPhase & { theme: LearningTheme | null }) | null;
+      })
+    | null;
   error: PostgrestError | null;
 }> {
   const supabase = await createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from("learning_weeks")
-    .select("*, phase:learning_phases(*)")
+    .select("*, phase:learning_phases(*, theme:learning_themes(*))")
     .eq("id", weekId)
     .eq("is_published", true)
     .eq("is_deleted", false)
@@ -132,7 +211,7 @@ export async function fetchContentsByWeekId(weekId: number): Promise<{
 }
 
 /**
- * コンテンツ詳細を取得（週・フェーズ情報付き）
+ * コンテンツ詳細を取得（週・フェーズ・テーマ情報付き）
  */
 export async function fetchContentById(contentId: number): Promise<{
   data: LearningContentWithWeek | null;
@@ -142,7 +221,7 @@ export async function fetchContentById(contentId: number): Promise<{
 
   const { data, error } = await supabase
     .from("learning_contents")
-    .select("*, week:learning_weeks(*, phase:learning_phases(*))")
+    .select("*, week:learning_weeks(*, phase:learning_phases(*, theme:learning_themes(*)))")
     .eq("id", contentId)
     .eq("is_published", true)
     .eq("is_deleted", false)

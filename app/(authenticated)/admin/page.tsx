@@ -1,9 +1,10 @@
-import { BookOpen, Calendar, ClipboardList, FileText, Users } from "lucide-react";
+import { BookOpen, Calendar, ClipboardList, FileText, FolderOpen, Users } from "lucide-react";
 import Link from "next/link";
 import { PageTitle } from "@/app/components/PageTitle";
 import {
   fetchAllContents,
   fetchAllPhases,
+  fetchAllThemes,
   fetchAllWeeks,
   fetchStudentsProgress,
 } from "@/app/services/api/admin-server";
@@ -12,12 +13,14 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default async function AdminDashboardPage() {
   const [
+    { data: themes },
     { data: phases },
     { data: weeks },
     { data: contents },
     { data: students },
     { data: submissions },
   ] = await Promise.all([
+    fetchAllThemes(),
     fetchAllPhases(),
     fetchAllWeeks(),
     fetchAllContents(),
@@ -26,6 +29,13 @@ export default async function AdminDashboardPage() {
   ]);
 
   const stats = [
+    {
+      title: "テーマ数",
+      value: themes?.length || 0,
+      href: "/admin/themes",
+      icon: FolderOpen,
+      bgClass: "bg-chart-1/10 text-chart-1",
+    },
     {
       title: "フェーズ数",
       value: phases?.length || 0,
@@ -59,7 +69,7 @@ export default async function AdminDashboardPage() {
       value: submissions?.length || 0,
       href: "/admin/submissions",
       icon: ClipboardList,
-      bgClass: "bg-chart-1/10 text-chart-1",
+      bgClass: "bg-primary/10 text-primary",
     },
   ];
 
@@ -68,7 +78,7 @@ export default async function AdminDashboardPage() {
       <PageTitle title="管理ダッシュボード" description="学習コンテンツと受講生の管理" />
 
       {/* 統計カード */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         {stats.map((stat) => (
           <Link key={stat.href} href={stat.href} className="block group">
             <Card className="transition-all hover:shadow-md hover:border-primary/20">

@@ -2,27 +2,33 @@ import { Calendar, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PageTitle } from "@/app/components/PageTitle";
-import { fetchPhaseById, fetchWeeksByPhaseId } from "@/app/services/api/learning-server";
+import {
+  fetchPhaseById,
+  fetchThemeById,
+  fetchWeeksByPhaseId,
+} from "@/app/services/api/learning-server";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface PageProps {
-  params: Promise<{ phaseId: string }>;
+  params: Promise<{ themeId: string; phaseId: string }>;
 }
 
 export default async function PhasePage({ params }: PageProps) {
-  const { phaseId } = await params;
+  const { themeId, phaseId } = await params;
+  const themeIdNum = Number.parseInt(themeId, 10);
   const phaseIdNum = Number.parseInt(phaseId, 10);
 
-  if (Number.isNaN(phaseIdNum)) {
+  if (Number.isNaN(themeIdNum) || Number.isNaN(phaseIdNum)) {
     notFound();
   }
 
-  const [{ data: phase }, { data: weeks }] = await Promise.all([
+  const [{ data: theme }, { data: phase }, { data: weeks }] = await Promise.all([
+    fetchThemeById(themeIdNum),
     fetchPhaseById(phaseIdNum),
     fetchWeeksByPhaseId(phaseIdNum),
   ]);
 
-  if (!phase) {
+  if (!theme || !phase || phase.theme_id !== themeIdNum) {
     notFound();
   }
 
@@ -31,7 +37,11 @@ export default async function PhasePage({ params }: PageProps) {
       <PageTitle
         title={phase.name}
         description={phase.description || undefined}
-        breadcrumbs={[{ label: "学習コンテンツ", href: "/learn" }, { label: phase.name }]}
+        breadcrumbs={[
+          { label: "学習コンテンツ", href: "/learn" },
+          { label: theme.name, href: `/learn/${themeIdNum}` },
+          { label: phase.name },
+        ]}
       />
 
       {!weeks || weeks.length === 0 ? (
@@ -44,7 +54,11 @@ export default async function PhasePage({ params }: PageProps) {
       ) : (
         <div className="grid gap-4">
           {weeks.map((week) => (
-            <Link key={week.id} href={`/learn/${phaseIdNum}/${week.id}`} className="block group">
+            <Link
+              key={week.id}
+              href={`/learn/${themeIdNum}/${phaseIdNum}/${week.id}`}
+              className="block group"
+            >
               <Card className="transition-all hover:shadow-md hover:border-primary/20">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">

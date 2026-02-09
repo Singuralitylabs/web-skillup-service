@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 
 interface PageProps {
-  params: Promise<{ phaseId: string; weekId: string }>;
+  params: Promise<{ themeId: string; phaseId: string; weekId: string }>;
 }
 
 function getContentIcon(type: ContentType) {
@@ -44,11 +44,12 @@ function getContentTypeLabel(type: ContentType) {
 }
 
 export default async function WeekPage({ params }: PageProps) {
-  const { phaseId, weekId } = await params;
+  const { themeId, phaseId, weekId } = await params;
+  const themeIdNum = Number.parseInt(themeId, 10);
   const phaseIdNum = Number.parseInt(phaseId, 10);
   const weekIdNum = Number.parseInt(weekId, 10);
 
-  if (Number.isNaN(phaseIdNum) || Number.isNaN(weekIdNum)) {
+  if (Number.isNaN(themeIdNum) || Number.isNaN(phaseIdNum) || Number.isNaN(weekIdNum)) {
     notFound();
   }
 
@@ -78,7 +79,14 @@ export default async function WeekPage({ params }: PageProps) {
         description={week.description || undefined}
         breadcrumbs={[
           { label: "学習コンテンツ", href: "/learn" },
-          { label: week.phase?.name || "フェーズ", href: `/learn/${phaseIdNum}` },
+          {
+            label: week.phase?.theme?.name || "テーマ",
+            href: `/learn/${themeIdNum}`,
+          },
+          {
+            label: week.phase?.name || "フェーズ",
+            href: `/learn/${themeIdNum}/${phaseIdNum}`,
+          },
           { label: week.name },
         ]}
       />
@@ -111,7 +119,7 @@ export default async function WeekPage({ params }: PageProps) {
             return (
               <Link
                 key={content.id}
-                href={`/learn/${phaseIdNum}/${weekIdNum}/${content.id}`}
+                href={`/learn/${themeIdNum}/${phaseIdNum}/${weekIdNum}/${content.id}`}
                 className="block group"
               >
                 <Card

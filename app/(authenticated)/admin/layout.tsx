@@ -1,4 +1,12 @@
-import { BookOpen, Calendar, ClipboardList, FileText, LayoutDashboard, Users } from "lucide-react";
+import {
+  BookOpen,
+  Calendar,
+  ClipboardList,
+  FileText,
+  FolderOpen,
+  LayoutDashboard,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { checkAdminPermissions } from "@/app/services/auth/permissions";
@@ -7,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 
 const ADMIN_NAV_ITEMS = [
   { title: "ダッシュボード", href: "/admin", icon: LayoutDashboard },
+  { title: "テーマ管理", href: "/admin/themes", icon: FolderOpen },
   { title: "フェーズ管理", href: "/admin/phases", icon: BookOpen },
   { title: "週管理", href: "/admin/weeks", icon: Calendar },
   { title: "コンテンツ管理", href: "/admin/contents", icon: FileText },

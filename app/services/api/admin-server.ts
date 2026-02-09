@@ -1,20 +1,101 @@
 import type { PostgrestError } from "@supabase/supabase-js";
-import type { LearningContent, LearningPhase, LearningWeek, UserType } from "@/app/types";
+import type {
+  LearningContent,
+  LearningPhase,
+  LearningPhaseWithTheme,
+  LearningTheme,
+  LearningWeek,
+  UserType,
+} from "@/app/types";
 import { createServerSupabaseClient } from "./supabase-server";
+
+// =====================================================
+// テーマ管理
+// =====================================================
+
+export async function fetchAllThemes(): Promise<{
+  data: LearningTheme[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("learning_themes")
+    .select("*")
+    .eq("is_deleted", false)
+    .order("display_order");
+
+  if (error) {
+    console.error("テーマ一覧取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+}
+
+export async function createTheme(theme: {
+  name: string;
+  description?: string;
+  display_order?: number;
+  is_published?: boolean;
+}): Promise<{ data: LearningTheme | null; error: PostgrestError | null }> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase.from("learning_themes").insert(theme).select().single();
+
+  if (error) {
+    console.error("テーマ作成エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+}
+
+export async function updateTheme(
+  id: number,
+  theme: Partial<LearningTheme>
+): Promise<{ error: PostgrestError | null }> {
+  const supabase = await createServerSupabaseClient();
+
+  const { error } = await supabase.from("learning_themes").update(theme).eq("id", id);
+
+  if (error) {
+    console.error("テーマ更新エラー:", error.message);
+    return { error };
+  }
+
+  return { error: null };
+}
+
+export async function deleteTheme(id: number): Promise<{ error: PostgrestError | null }> {
+  const supabase = await createServerSupabaseClient();
+
+  const { error } = await supabase
+    .from("learning_themes")
+    .update({ is_deleted: true })
+    .eq("id", id);
+
+  if (error) {
+    console.error("テーマ削除エラー:", error.message);
+    return { error };
+  }
+
+  return { error: null };
+}
 
 // =====================================================
 // フェーズ管理
 // =====================================================
 
 export async function fetchAllPhases(): Promise<{
-  data: LearningPhase[] | null;
+  data: LearningPhaseWithTheme[] | null;
   error: PostgrestError | null;
 }> {
   const supabase = await createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from("learning_phases")
-    .select("*")
+    .select("*, theme:learning_themes(*)")
     .eq("is_deleted", false)
     .order("display_order");
 
@@ -23,10 +104,11 @@ export async function fetchAllPhases(): Promise<{
     return { data: null, error };
   }
 
-  return { data, error: null };
+  return { data: data as LearningPhaseWithTheme[], error: null };
 }
 
 export async function createPhase(phase: {
+  theme_id: number;
   name: string;
   description?: string;
   display_order?: number;

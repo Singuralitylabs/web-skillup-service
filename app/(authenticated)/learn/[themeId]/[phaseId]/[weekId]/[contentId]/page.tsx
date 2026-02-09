@@ -17,16 +17,22 @@ import { CompleteButton } from "./CompleteButton";
 import { SubmissionForm } from "./SubmissionForm";
 
 interface PageProps {
-  params: Promise<{ phaseId: string; weekId: string; contentId: string }>;
+  params: Promise<{ themeId: string; phaseId: string; weekId: string; contentId: string }>;
 }
 
 export default async function ContentPage({ params }: PageProps) {
-  const { phaseId, weekId, contentId } = await params;
+  const { themeId, phaseId, weekId, contentId } = await params;
+  const themeIdNum = Number.parseInt(themeId, 10);
   const phaseIdNum = Number.parseInt(phaseId, 10);
   const weekIdNum = Number.parseInt(weekId, 10);
   const contentIdNum = Number.parseInt(contentId, 10);
 
-  if (Number.isNaN(phaseIdNum) || Number.isNaN(weekIdNum) || Number.isNaN(contentIdNum)) {
+  if (
+    Number.isNaN(themeIdNum) ||
+    Number.isNaN(phaseIdNum) ||
+    Number.isNaN(weekIdNum) ||
+    Number.isNaN(contentIdNum)
+  ) {
     notFound();
   }
 
@@ -56,12 +62,16 @@ export default async function ContentPage({ params }: PageProps) {
         breadcrumbs={[
           { label: "学習コンテンツ", href: "/learn" },
           {
+            label: content.week?.phase?.theme?.name || "テーマ",
+            href: `/learn/${themeIdNum}`,
+          },
+          {
             label: content.week?.phase?.name || "フェーズ",
-            href: `/learn/${phaseIdNum}`,
+            href: `/learn/${themeIdNum}/${phaseIdNum}`,
           },
           {
             label: content.week?.name || "週",
-            href: `/learn/${phaseIdNum}/${weekIdNum}`,
+            href: `/learn/${themeIdNum}/${phaseIdNum}/${weekIdNum}`,
           },
           { label: content.title },
         ]}
@@ -107,7 +117,7 @@ export default async function ContentPage({ params }: PageProps) {
       <div className="flex items-center justify-between gap-4">
         {prevContent ? (
           <Button variant="outline" asChild className="flex-1 justify-start">
-            <Link href={`/learn/${phaseIdNum}/${weekIdNum}/${prevContent.id}`}>
+            <Link href={`/learn/${themeIdNum}/${phaseIdNum}/${weekIdNum}/${prevContent.id}`}>
               <ChevronLeft className="h-4 w-4 mr-2" />
               <span className="truncate">{prevContent.title}</span>
             </Link>
@@ -118,14 +128,14 @@ export default async function ContentPage({ params }: PageProps) {
 
         {nextContent ? (
           <Button variant="outline" asChild className="flex-1 justify-end">
-            <Link href={`/learn/${phaseIdNum}/${weekIdNum}/${nextContent.id}`}>
+            <Link href={`/learn/${themeIdNum}/${phaseIdNum}/${weekIdNum}/${nextContent.id}`}>
               <span className="truncate">{nextContent.title}</span>
               <ChevronRight className="h-4 w-4 ml-2" />
             </Link>
           </Button>
         ) : (
           <Button asChild className="flex-1 justify-center">
-            <Link href={`/learn/${phaseIdNum}/${weekIdNum}`}>週の一覧に戻る</Link>
+            <Link href={`/learn/${themeIdNum}/${phaseIdNum}/${weekIdNum}`}>週の一覧に戻る</Link>
           </Button>
         )}
       </div>
