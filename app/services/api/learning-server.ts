@@ -132,6 +132,34 @@ export async function fetchPhaseById(phaseId: number): Promise<{
 }
 
 /**
+ * フェーズに属する公開週一覧をコンテンツ付きで取得
+ */
+export async function fetchWeeksWithContentsByPhaseId(phaseId: number): Promise<{
+  data: (LearningWeek & { contents: LearningContent[] })[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("learning_weeks")
+    .select("*, contents:learning_contents(*)")
+    .eq("phase_id", phaseId)
+    .eq("is_published", true)
+    .eq("is_deleted", false)
+    .eq("contents.is_published", true)
+    .eq("contents.is_deleted", false)
+    .order("display_order")
+    .order("display_order", { referencedTable: "learning_contents" });
+
+  if (error) {
+    console.error("週・コンテンツ一覧取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data: data as (LearningWeek & { contents: LearningContent[] })[], error: null };
+}
+
+/**
  * フェーズに属する公開週一覧を取得
  */
 export async function fetchWeeksByPhaseId(phaseId: number): Promise<{

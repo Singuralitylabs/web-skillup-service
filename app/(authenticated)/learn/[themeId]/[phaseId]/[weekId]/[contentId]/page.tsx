@@ -69,10 +69,6 @@ export default async function ContentPage({ params }: PageProps) {
             label: content.week?.phase?.name || "フェーズ",
             href: `/learn/${themeIdNum}/${phaseIdNum}`,
           },
-          {
-            label: content.week?.name || "週",
-            href: `/learn/${themeIdNum}/${phaseIdNum}/${weekIdNum}`,
-          },
           { label: content.title },
         ]}
       />
@@ -135,7 +131,7 @@ export default async function ContentPage({ params }: PageProps) {
           </Button>
         ) : (
           <Button asChild className="flex-1 justify-center">
-            <Link href={`/learn/${themeIdNum}/${phaseIdNum}/${weekIdNum}`}>週の一覧に戻る</Link>
+            <Link href={`/learn/${themeIdNum}/${phaseIdNum}`}>フェーズに戻る</Link>
           </Button>
         )}
       </div>
