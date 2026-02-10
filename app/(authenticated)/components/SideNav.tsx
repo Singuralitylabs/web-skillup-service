@@ -1,10 +1,13 @@
 "use client";
 
-import { BookOpen, ClipboardList, House, LogOut, Menu, Settings, X } from "lucide-react";
+import { BookOpen, ClipboardList, House, LogOut, Menu, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || "http://localhost:3001";
 
@@ -38,19 +41,12 @@ const ADMIN_NAV_ITEM: NavItem = {
   icon: <Settings className="h-5 w-5" />,
 };
 
-const LOGOUT_NAV_ITEM: NavItem = {
-  title: "ログアウト",
-  href: "#",
-  icon: <LogOut className="h-5 w-5" />,
-};
-
 export function SideNav({ isAdmin }: { isAdmin: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  // isAdminに応じて動的にnavItemsを構築
   const navItems = useMemo<NavItem[]>(
-    () => [...DEFAULT_NAV_ITEMS, ...(isAdmin ? [ADMIN_NAV_ITEM] : []), LOGOUT_NAV_ITEM],
+    () => [...DEFAULT_NAV_ITEMS, ...(isAdmin ? [ADMIN_NAV_ITEM] : [])],
     [isAdmin]
   );
 
@@ -68,30 +64,14 @@ export function SideNav({ isAdmin }: { isAdmin: boolean }) {
   const NavLink = ({ item, onClick }: { item: NavItem; onClick?: () => void }) => {
     const active = isActive(item.href);
 
-    if (item.title === "ログアウト") {
-      return (
-        <button
-          type="button"
-          onClick={() => {
-            handleSignOut();
-            onClick?.();
-          }}
-          className="flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground transition-all hover:text-foreground hover:bg-muted w-full text-left"
-        >
-          {item.icon}
-          {item.title}
-        </button>
-      );
-    }
-
     return (
       <Link
         href={item.href}
         onClick={onClick}
-        className={`flex items-center gap-3 rounded-md px-3 py-2 transition-all ${
+        className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition-all ${
           active
-            ? "bg-primary text-primary-foreground"
-            : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            ? "bg-primary/10 text-primary"
+            : "text-muted-foreground hover:text-foreground hover:bg-accent"
         }`}
       >
         {item.icon}
@@ -100,35 +80,48 @@ export function SideNav({ isAdmin }: { isAdmin: boolean }) {
     );
   };
 
+  const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => (
+    <>
+      <nav className="flex-1 px-3 py-2 space-y-1">
+        {navItems.map((item) => (
+          <NavLink key={item.title} item={item} onClick={onItemClick} />
+        ))}
+      </nav>
+      <div className="px-3 pb-4">
+        <Separator className="mb-3" />
+        <button
+          type="button"
+          onClick={() => {
+            handleSignOut();
+            onItemClick?.();
+          }}
+          className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:text-foreground hover:bg-accent w-full text-left"
+        >
+          <LogOut className="h-5 w-5" />
+          ログアウト
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <>
       {/* ハンバーガーメニュー (モバイル用) */}
-      <button
-        type="button"
+      <Button
+        variant="outline"
+        size="icon"
         onClick={() => setOpen(true)}
-        className="sm:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-card border border-border shadow-sm"
+        className="sm:hidden fixed top-4 left-4 z-50"
         aria-label="メニューを開く"
       >
-        <Menu size={24} />
-      </button>
+        <Menu className="h-5 w-5" />
+      </Button>
 
-      {/* モバイル用ドロワー */}
-      {open && (
-        <div className="sm:hidden fixed inset-0 z-50">
-          {/* オーバーレイ */}
-          <button
-            type="button"
-            className="fixed inset-0 bg-black/50 cursor-default"
-            onClick={() => setOpen(false)}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setOpen(false);
-            }}
-            aria-label="メニューを閉じる"
-          />
-
-          {/* ドロワー */}
-          <div className="fixed left-0 top-0 h-full w-64 bg-card border-r border-border shadow-lg">
-            <div className="flex items-center justify-between p-4 border-b border-border">
+      {/* モバイル用シート */}
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="left" className="w-64 p-0">
+          <SheetHeader className="px-6 py-5 border-b border-border">
+            <SheetTitle>
               <Link
                 href="/"
                 onClick={() => setOpen(false)}
@@ -136,36 +129,24 @@ export function SideNav({ isAdmin }: { isAdmin: boolean }) {
               >
                 Sinlab Skillup
               </Link>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="p-2 rounded-md hover:bg-muted"
-                aria-label="メニューを閉じる"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <nav className="p-4 space-y-2">
-              {navItems.map((item) => (
-                <NavLink key={item.title} item={item} onClick={() => setOpen(false)} />
-              ))}
-            </nav>
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col h-[calc(100%-73px)]">
+            <SidebarContent onItemClick={() => setOpen(false)} />
           </div>
-        </div>
-      )}
+        </SheetContent>
+      </Sheet>
 
       {/* デスクトップ用サイドバー */}
-      <div className="hidden sm:flex h-screen w-64 flex-col fixed left-0 top-0 border-r border-border bg-card">
-        <div className="p-6 border-b border-border">
+      <div className="hidden sm:flex h-screen w-64 flex-col fixed left-0 top-0 border-r border-sidebar-border bg-sidebar">
+        <div className="px-6 py-5 border-b border-sidebar-border">
           <Link href="/" className="text-xl font-bold flex items-center gap-2">
             Sinlab Skillup
           </Link>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
-          {navItems.map((item) => (
-            <NavLink key={item.title} item={item} />
-          ))}
-        </nav>
+        <div className="flex flex-col flex-1 pt-2">
+          <SidebarContent />
+        </div>
       </div>
     </>
   );

@@ -20,8 +20,6 @@ export default async function AuthLayout({
       }
     }
   } catch (error: unknown) {
-    // Dynamic server usageエラーは正常な動作（認証が必要なため静的生成できない）
-    // その他のエラーの場合のみログ出力
     if (
       error &&
       typeof error === "object" &&
@@ -36,7 +34,7 @@ export default async function AuthLayout({
     <AuthGuard>
       <div className="sm:flex min-h-screen">
         <SideNav isAdmin={isAdmin} />
-        <main className="flex-1 sm:ml-64 p-4 pt-16 sm:pt-4">{children}</main>
+        <main className="flex-1 sm:ml-64 p-6 pt-20 sm:pt-6">{children}</main>
       </div>
     </AuthGuard>
   );

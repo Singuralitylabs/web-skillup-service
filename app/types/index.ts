@@ -19,8 +19,21 @@ export interface UserType {
 // Learning content types
 export type ContentType = "video" | "text" | "exercise";
 
+export interface LearningTheme {
+  id: number;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  display_order: number;
+  is_published: boolean;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface LearningPhase {
   id: number;
+  theme_id: number;
   name: string;
   description: string | null;
   display_order: number;
@@ -80,12 +93,16 @@ export interface Submission {
 }
 
 // Extended types with relations
+export interface LearningPhaseWithTheme extends LearningPhase {
+  theme: LearningTheme | null;
+}
+
 export interface LearningWeekWithPhase extends LearningWeek {
   phase: LearningPhase | null;
 }
 
 export interface LearningContentWithWeek extends LearningContent {
-  week: LearningWeekWithPhase | null;
+  week: (LearningWeek & { phase: (LearningPhase & { theme: LearningTheme | null }) | null }) | null;
 }
 
 export interface SubmissionWithContent extends Submission {
@@ -98,6 +115,13 @@ export interface SubmissionWithUser extends Submission {
 }
 
 // Progress summary types
+export interface ThemeProgress {
+  theme: LearningTheme;
+  totalContents: number;
+  completedContents: number;
+  progressPercent: number;
+}
+
 export interface PhaseProgress {
   phase: LearningPhase;
   totalContents: number;

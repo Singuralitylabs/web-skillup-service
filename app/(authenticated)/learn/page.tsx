@@ -1,46 +1,59 @@
 import { BookOpen, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { PageTitle } from "@/app/components/PageTitle";
-import { fetchPublishedPhases } from "@/app/services/api/learning-server";
-import { getServerAuth } from "@/app/services/auth/server-auth";
+import { fetchPublishedThemes } from "@/app/services/api/learning-server";
+import { Card } from "@/components/ui/card";
 
 export default async function LearnPage() {
-  const { userId } = await getServerAuth();
-  const { data: phases } = await fetchPublishedPhases();
+  const { data: themes } = await fetchPublishedThemes();
 
   return (
     <div className="max-w-4xl mx-auto">
-      <PageTitle title="学習コンテンツ" description="フェーズを選択して学習を始めましょう" />
+      <PageTitle title="学習コンテンツ" description="学習テーマを選択して学習を始めましょう" />
 
-      {!phases || phases.length === 0 ? (
-        <div className="card p-8 text-center">
+      {!themes || themes.length === 0 ? (
+        <Card className="py-12 text-center">
           <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">学習コンテンツはまだ登録されていません。</p>
-        </div>
+        </Card>
       ) : (
-        <div className="grid gap-4">
-          {phases.map((phase) => (
-            <Link
-              key={phase.id}
-              href={`/learn/${phase.id}`}
-              className="card p-6 hover:shadow-md transition-shadow group"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-primary/10 rounded-full">
-                    <BookOpen className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold group-hover:text-primary transition-colors">
-                      {phase.name}
-                    </h2>
-                    {phase.description && (
-                      <p className="text-sm text-muted-foreground mt-1">{phase.description}</p>
-                    )}
-                  </div>
+        <div className="grid gap-6 sm:grid-cols-2">
+          {themes.map((theme) => (
+            <Link key={theme.id} href={`/learn/${theme.id}`} className="block group">
+              <Card className="overflow-hidden transition-all hover:shadow-lg hover:border-primary/30 h-full">
+                {/* イラスト画像エリア */}
+                <div className="relative aspect-[16/9] bg-gradient-to-br from-primary/5 to-primary/15">
+                  {theme.image_url ? (
+                    <Image
+                      src={theme.image_url}
+                      alt={theme.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 640px) 100vw, 50vw"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <BookOpen className="h-16 w-16 text-primary/30" />
+                    </div>
+                  )}
                 </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              </div>
+
+                {/* テキストエリア */}
+                <div className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <h2 className="text-lg font-semibold group-hover:text-primary transition-colors">
+                      {theme.name}
+                    </h2>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                  </div>
+                  {theme.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {theme.description}
+                    </p>
+                  )}
+                </div>
+              </Card>
             </Link>
           ))}
         </div>

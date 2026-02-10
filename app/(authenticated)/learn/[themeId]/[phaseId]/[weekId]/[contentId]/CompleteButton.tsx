@@ -2,6 +2,7 @@
 
 import { CheckCircle, Circle, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface CompleteButtonProps {
   contentId: number;
@@ -42,13 +43,12 @@ export function CompleteButton({ contentId, userId, initialCompleted }: Complete
   };
 
   return (
-    <button
-      type="button"
+    <Button
       onClick={handleToggle}
       disabled={isLoading}
-      className={`btn w-full ${
-        isCompleted ? "btn-secondary" : "btn-primary"
-      } flex items-center justify-center gap-2`}
+      variant={isCompleted ? "secondary" : "default"}
+      size="lg"
+      className={`w-full ${isCompleted ? "border-success/30 bg-success/10 text-success hover:bg-success/20" : ""}`}
     >
       {isLoading ? (
         <Loader2 className="h-5 w-5 animate-spin" />
@@ -63,6 +63,6 @@ export function CompleteButton({ contentId, userId, initialCompleted }: Complete
           このコンテンツを完了としてマーク
         </>
       )}
-    </button>
+    </Button>
   );
 }

@@ -3,9 +3,84 @@ import type {
   LearningContent,
   LearningContentWithWeek,
   LearningPhase,
+  LearningTheme,
   LearningWeek,
 } from "@/app/types";
 import { createServerSupabaseClient } from "./supabase-server";
+
+/**
+ * 公開テーマ一覧を取得
+ */
+export async function fetchPublishedThemes(): Promise<{
+  data: LearningTheme[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("learning_themes")
+    .select("*")
+    .eq("is_published", true)
+    .eq("is_deleted", false)
+    .order("display_order");
+
+  if (error) {
+    console.error("テーマ一覧取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+}
+
+/**
+ * テーマ詳細を取得
+ */
+export async function fetchThemeById(themeId: number): Promise<{
+  data: LearningTheme | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("learning_themes")
+    .select("*")
+    .eq("id", themeId)
+    .eq("is_published", true)
+    .eq("is_deleted", false)
+    .single();
+
+  if (error) {
+    console.error("テーマ詳細取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+}
+
+/**
+ * テーマに属する公開フェーズ一覧を取得
+ */
+export async function fetchPhasesByThemeId(themeId: number): Promise<{
+  data: LearningPhase[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("learning_phases")
+    .select("*")
+    .eq("theme_id", themeId)
+    .eq("is_published", true)
+    .eq("is_deleted", false)
+    .order("display_order");
+
+  if (error) {
+    console.error("テーマ別フェーズ一覧取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data, error: null };
+}
 
 /**
  * 公開フェーズ一覧を取得
@@ -57,6 +132,34 @@ export async function fetchPhaseById(phaseId: number): Promise<{
 }
 
 /**
+ * フェーズに属する公開週一覧をコンテンツ付きで取得
+ */
+export async function fetchWeeksWithContentsByPhaseId(phaseId: number): Promise<{
+  data: (LearningWeek & { contents: LearningContent[] })[] | null;
+  error: PostgrestError | null;
+}> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("learning_weeks")
+    .select("*, contents:learning_contents(*)")
+    .eq("phase_id", phaseId)
+    .eq("is_published", true)
+    .eq("is_deleted", false)
+    .eq("contents.is_published", true)
+    .eq("contents.is_deleted", false)
+    .order("display_order")
+    .order("display_order", { referencedTable: "learning_contents" });
+
+  if (error) {
+    console.error("週・コンテンツ一覧取得エラー:", error.message);
+    return { data: null, error };
+  }
+
+  return { data: data as (LearningWeek & { contents: LearningContent[] })[], error: null };
+}
+
+/**
  * フェーズに属する公開週一覧を取得
  */
 export async function fetchWeeksByPhaseId(phaseId: number): Promise<{
@@ -82,17 +185,21 @@ export async function fetchWeeksByPhaseId(phaseId: number): Promise<{
 }
 
 /**
- * 週詳細を取得（フェーズ情報付き）
+ * 週詳細を取得（フェーズ・テーマ情報付き）
  */
 export async function fetchWeekById(weekId: number): Promise<{
-  data: (LearningWeek & { phase: LearningPhase | null }) | null;
+  data:
+    | (LearningWeek & {
+        phase: (LearningPhase & { theme: LearningTheme | null }) | null;
+      })
+    | null;
   error: PostgrestError | null;
 }> {
   const supabase = await createServerSupabaseClient();
 
   const { data, error } = await supabase
     .from("learning_weeks")
-    .select("*, phase:learning_phases(*)")
+    .select("*, phase:learning_phases(*, theme:learning_themes(*))")
     .eq("id", weekId)
     .eq("is_published", true)
     .eq("is_deleted", false)
@@ -132,7 +239,7 @@ export async function fetchContentsByWeekId(weekId: number): Promise<{
 }
 
 /**
- * コンテンツ詳細を取得（週・フェーズ情報付き）
+ * コンテンツ詳細を取得（週・フェーズ・テーマ情報付き）
  */
 export async function fetchContentById(contentId: number): Promise<{
   data: LearningContentWithWeek | null;
@@ -142,7 +249,7 @@ export async function fetchContentById(contentId: number): Promise<{
 
   const { data, error } = await supabase
     .from("learning_contents")
-    .select("*, week:learning_weeks(*, phase:learning_phases(*))")
+    .select("*, week:learning_weeks(*, phase:learning_phases(*, theme:learning_themes(*)))")
     .eq("id", contentId)
     .eq("is_published", true)
     .eq("is_deleted", false)

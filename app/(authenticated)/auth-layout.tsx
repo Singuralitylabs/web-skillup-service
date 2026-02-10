@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { USER_STATUS } from "@/app/constants/user";
 import { useSupabaseAuth } from "@/app/providers/supabase-auth-provider";
@@ -15,8 +16,6 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   const [statusLoading, setStatusLoading] = useState(true);
 
   useEffect(() => {
-    // ポータル連携前は認証スキップ
-    // TODO: ポータルサービス連携時に削除すること
     if (SKIP_AUTH) {
       setStatusLoading(false);
       return;
@@ -25,14 +24,12 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     if (loading) return;
 
     if (!user) {
-      // ポータルのログインページにリダイレクト
       const redirectUrl = new URL("/login", PORTAL_URL);
       redirectUrl.searchParams.set("redirect", window.location.href);
       window.location.href = redirectUrl.toString();
       return;
     }
 
-    // ユーザーのステータスを確認
     const checkUserStatus = async () => {
       try {
         const { status, error } = await fetchUserStatusById({ authId: user.id });
@@ -42,7 +39,6 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // ステータスに応じてポータルにリダイレクト
         if (status === USER_STATUS.PENDING) {
           window.location.href = `${PORTAL_URL}/pending`;
           return;
@@ -68,27 +64,24 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     checkUserStatus();
   }, [user, loading]);
 
-  // ローディング中
   if (loading || statusLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="mb-4">読み込み中...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-sm text-muted-foreground">読み込み中...</p>
         </div>
       </div>
     );
   }
 
-  // SKIP_AUTH時は認証なしでコンテンツ表示
   if (SKIP_AUTH) {
     return <>{children}</>;
   }
 
-  // 認証済みかつactiveな場合のみコンテンツを表示
   if (user && userStatus === USER_STATUS.ACTIVE) {
     return <>{children}</>;
   }
 
-  // その他の場合は何も表示しない（リダイレクト処理が実行される）
   return null;
 }
