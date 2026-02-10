@@ -98,11 +98,11 @@ export interface LearningPhaseWithTheme extends LearningPhase {
 }
 
 export interface LearningWeekWithPhase extends LearningWeek {
-  phase: LearningPhase | null;
+  phase: LearningPhaseWithTheme | null;
 }
 
 export interface LearningContentWithWeek extends LearningContent {
-  week: (LearningWeek & { phase: (LearningPhase & { theme: LearningTheme | null }) | null }) | null;
+  week: LearningWeekWithPhase | null;
 }
 
 export interface SubmissionWithContent extends Submission {

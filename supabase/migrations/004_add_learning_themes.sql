@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS learning_themes (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   description TEXT,
+  image_url TEXT,
   display_order INTEGER DEFAULT 0,
   is_published BOOLEAN DEFAULT false,
   is_deleted BOOLEAN DEFAULT false,
