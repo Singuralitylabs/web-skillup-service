@@ -4,6 +4,15 @@ import { fetchAllSubmissions } from "@/app/services/api/submissions-server";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
+function isValidUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleString("ja-JP", {
     year: "numeric",
@@ -64,17 +73,21 @@ export default async function AdminSubmissionsPage() {
                   </pre>
                 )}
 
-                {submission.submission_type === "url" && submission.url && (
-                  <a
-                    href={submission.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-primary hover:underline"
-                  >
-                    {submission.url}
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                )}
+                {submission.submission_type === "url" &&
+                  submission.url &&
+                  (isValidUrl(submission.url) ? (
+                    <a
+                      href={submission.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-primary hover:underline"
+                    >
+                      {submission.url}
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">{submission.url}</span>
+                  ))}
               </CardContent>
             </Card>
           ))}
