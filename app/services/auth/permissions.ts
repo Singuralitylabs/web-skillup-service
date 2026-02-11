@@ -9,3 +9,8 @@ export function checkAdminPermissions(role: string): boolean {
 export function checkContentPermissions(role: string): boolean {
   return role === USER_ROLE.ADMIN || role === USER_ROLE.MAINTAINER;
 }
+
+// ユーザーが講師権限か確認（管理者とメンテナー）
+export function checkInstructorPermissions(role: string): boolean {
+  return role === USER_ROLE.ADMIN || role === USER_ROLE.MAINTAINER;
+}

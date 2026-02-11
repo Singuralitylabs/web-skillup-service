@@ -1,6 +1,14 @@
 "use client";
 
-import { BookOpen, ClipboardList, House, LogOut, Menu, Settings } from "lucide-react";
+import {
+  BookOpen,
+  ClipboardList,
+  GraduationCap,
+  House,
+  LogOut,
+  Menu,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -35,19 +43,29 @@ const DEFAULT_NAV_ITEMS: NavItem[] = [
   },
 ];
 
+const INSTRUCTOR_NAV_ITEM: NavItem = {
+  title: "講師画面",
+  href: "/instructor",
+  icon: <GraduationCap className="h-5 w-5" />,
+};
+
 const ADMIN_NAV_ITEM: NavItem = {
   title: "管理画面",
   href: "/admin",
   icon: <Settings className="h-5 w-5" />,
 };
 
-export function SideNav({ isAdmin }: { isAdmin: boolean }) {
+export function SideNav({ isAdmin, isInstructor }: { isAdmin: boolean; isInstructor: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
   const navItems = useMemo<NavItem[]>(
-    () => [...DEFAULT_NAV_ITEMS, ...(isAdmin ? [ADMIN_NAV_ITEM] : [])],
-    [isAdmin]
+    () => [
+      ...DEFAULT_NAV_ITEMS,
+      ...(isInstructor && !isAdmin ? [INSTRUCTOR_NAV_ITEM] : []),
+      ...(isAdmin ? [ADMIN_NAV_ITEM] : []),
+    ],
+    [isAdmin, isInstructor]
   );
 
   const handleSignOut = async () => {
