@@ -1,6 +1,8 @@
 import { ClipboardList, Code, ExternalLink, Link as LinkIcon } from "lucide-react";
+import { AIReviewStatusBadge } from "@/app/components/AIReviewDisplay";
+import { AIReviewDisplayServer } from "@/app/components/AIReviewDisplayServer";
 import { PageTitle } from "@/app/components/PageTitle";
-import { fetchAllSubmissions } from "@/app/services/api/submissions-server";
+import { fetchAllSubmissionsWithReviews } from "@/app/services/api/ai-review-server";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -24,7 +26,7 @@ function formatDate(dateString: string) {
 }
 
 export default async function AdminSubmissionsPage() {
-  const { data: submissions } = await fetchAllSubmissions();
+  const { data: submissions } = await fetchAllSubmissionsWithReviews();
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -55,7 +57,7 @@ export default async function AdminSubmissionsPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
                   <Badge variant="secondary" className="gap-1">
                     {submission.submission_type === "code" ? (
                       <Code className="h-3 w-3" />
@@ -64,6 +66,7 @@ export default async function AdminSubmissionsPage() {
                     )}
                     {submission.submission_type === "code" ? "コード提出" : "URL提出"}
                   </Badge>
+                  <AIReviewStatusBadge review={submission.ai_review} />
                   <span className="text-sm font-medium">{submission.content?.title}</span>
                 </div>
 
@@ -88,6 +91,8 @@ export default async function AdminSubmissionsPage() {
                   ) : (
                     <span className="text-sm text-muted-foreground">{submission.url}</span>
                   ))}
+
+                {submission.ai_review && <AIReviewDisplayServer review={submission.ai_review} />}
               </CardContent>
             </Card>
           ))}

@@ -1,7 +1,9 @@
 import { ClipboardList, Code, ExternalLink, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
+import { AIReviewStatusBadge } from "@/app/components/AIReviewDisplay";
+import { AIReviewDisplayServer } from "@/app/components/AIReviewDisplayServer";
 import { PageTitle } from "@/app/components/PageTitle";
-import { fetchSubmissionsByUserId } from "@/app/services/api/submissions-server";
+import { fetchSubmissionsWithReviewsByUserId } from "@/app/services/api/ai-review-server";
 import { getServerAuth } from "@/app/services/auth/server-auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,7 +30,7 @@ export default async function SubmissionsPage() {
     );
   }
 
-  const { data: submissions } = await fetchSubmissionsByUserId(userId);
+  const { data: submissions } = await fetchSubmissionsWithReviewsByUserId(userId);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -54,7 +56,7 @@ export default async function SubmissionsPage() {
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <Badge variant="secondary" className="gap-1">
                         {submission.submission_type === "code" ? (
                           <Code className="h-3 w-3" />
@@ -63,6 +65,7 @@ export default async function SubmissionsPage() {
                         )}
                         {submission.submission_type === "code" ? "コード提出" : "URL提出"}
                       </Badge>
+                      <AIReviewStatusBadge review={submission.ai_review} />
                       <span className="text-sm text-muted-foreground">
                         {formatDate(submission.submitted_at)}
                       </span>
@@ -88,6 +91,10 @@ export default async function SubmissionsPage() {
                         {submission.url}
                         <ExternalLink className="h-4 w-4" />
                       </a>
+                    )}
+
+                    {submission.ai_review && (
+                      <AIReviewDisplayServer review={submission.ai_review} />
                     )}
                   </div>
                 </div>
