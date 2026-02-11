@@ -23,7 +23,7 @@ function formatDate(dateString: string) {
   });
 }
 
-export default async function AdminSubmissionsPage() {
+export default async function InstructorSubmissionsPage() {
   const { data: submissions } = await fetchAllSubmissions();
 
   return (

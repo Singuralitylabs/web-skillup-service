@@ -1,5 +1,6 @@
 import { type CookieOptions, createServerClient } from "@supabase/ssr";
 import type { AuthError } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 // サーバーサイド用Supabaseクライアント（認証付き）
@@ -26,6 +27,17 @@ export async function createServerSupabaseClient() {
       },
     }
   );
+}
+
+// サーバーサイド用Supabaseクライアント（Service Role: RLSバイパス）
+// レイアウトで権限チェック済みの管理者・講師向けクエリに使用
+export async function createAdminSupabaseClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (serviceRoleKey) {
+    return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey);
+  }
+  // Service Role Key未設定時は通常クライアントにフォールバック
+  return createServerSupabaseClient();
 }
 
 /**

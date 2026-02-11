@@ -112,9 +112,7 @@ export default async function PhasePage({ params }: PageProps) {
       ) : (
         <div className="space-y-6">
           {weeks.map((week) => {
-            const weekCompletedCount = week.contents.filter(
-              (c) => progressMap.get(c.id)
-            ).length;
+            const weekCompletedCount = week.contents.filter((c) => progressMap.get(c.id)).length;
             const weekTotalCount = week.contents.length;
             const allCompleted = weekTotalCount > 0 && weekCompletedCount === weekTotalCount;
 
@@ -124,9 +122,7 @@ export default async function PhasePage({ params }: PageProps) {
                 <div className="flex items-center gap-3 mb-3">
                   <div
                     className={`p-2 rounded-full ${
-                      allCompleted
-                        ? "bg-success/10 text-success"
-                        : "bg-primary/10 text-primary"
+                      allCompleted ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
                     }`}
                   >
                     {allCompleted ? (

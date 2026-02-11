@@ -1,6 +1,6 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import type { SubmissionWithContent, SubmissionWithUser } from "@/app/types";
-import { createServerSupabaseClient } from "./supabase-server";
+import { createAdminSupabaseClient, createServerSupabaseClient } from "./supabase-server";
 
 /**
  * ユーザーの提出履歴を取得
@@ -26,13 +26,14 @@ export async function fetchSubmissionsByUserId(userId: number): Promise<{
 }
 
 /**
- * 全ユーザーの提出履歴を取得（管理者用）
+ * 全ユーザーの提出履歴を取得（管理者・講師用）
+ * Service Roleクライアントを使用（呼び出し元で権限チェック済み前提）
  */
 export async function fetchAllSubmissions(): Promise<{
   data: SubmissionWithUser[] | null;
   error: PostgrestError | null;
 }> {
-  const supabase = await createServerSupabaseClient();
+  const supabase = await createAdminSupabaseClient();
 
   const { data, error } = await supabase
     .from("submissions")
