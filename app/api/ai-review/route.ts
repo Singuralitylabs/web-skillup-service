@@ -6,7 +6,7 @@ import {
   upsertPendingAIReview,
 } from "@/app/services/api/ai-review-server";
 import { generateReview } from "@/app/services/api/gemini";
-import { createServerSupabaseClient } from "@/app/services/api/supabase-server";
+import { getApiAuth, getApiSupabaseClient } from "@/app/services/auth/api-auth";
 
 const MAX_CODE_LENGTH = 50000;
 
@@ -19,28 +19,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "submissionId は必須です" }, { status: 400 });
     }
 
-    // 認証チェック
-    const supabase = await createServerSupabaseClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+    // 認証チェック（SKIP_AUTH対応）
+    const auth = await getApiAuth();
+    if (!auth.success) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    // ユーザー情報取得
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("auth_id", user.id)
-      .eq("is_deleted", false)
-      .single();
-
-    if (userError || !userData) {
-      return NextResponse.json({ error: "ユーザー情報が見つかりません" }, { status: 403 });
-    }
+    const supabase = await getApiSupabaseClient();
 
     // 提出データ + コンテンツ取得
     const { data: submission, error: submissionError } = await supabase
@@ -54,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 本人の提出か検証
-    if (submission.user_id !== userData.id) {
+    if (submission.user_id !== auth.data.userId) {
       return NextResponse.json({ error: "権限がありません" }, { status: 403 });
     }
 
@@ -131,10 +116,7 @@ export async function POST(request: NextRequest) {
 
       await updateAIReviewFailed(reviewRecord.id, errorMessage);
 
-      return NextResponse.json(
-        { error: "AIレビューの生成に失敗しました。再試行してください。" },
-        { status: 502 }
-      );
+      return NextResponse.json({ error: errorMessage }, { status: 502 });
     }
   } catch (error) {
     console.error("AIレビューAPIエラー:", error);

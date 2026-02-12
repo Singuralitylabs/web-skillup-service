@@ -51,6 +51,8 @@ export function SubmissionForm({ contentId, userId }: SubmissionFormProps) {
         });
         setMessage({ type: "success", text: "提出が完了しました。AIレビューが生成されました。" });
       } else {
+        const errorData = await response.json().catch(() => null);
+        const errorMsg = errorData?.error || "AIレビューの生成に失敗しました";
         setAiReview({
           id: 0,
           submission_id: submissionId,
@@ -60,7 +62,7 @@ export function SubmissionForm({ contentId, userId }: SubmissionFormProps) {
           model_used: null,
           prompt_tokens: null,
           completion_tokens: null,
-          error_message: "AIレビューの生成に失敗しました",
+          error_message: errorMsg,
           reviewed_at: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -76,7 +78,7 @@ export function SubmissionForm({ contentId, userId }: SubmissionFormProps) {
         model_used: null,
         prompt_tokens: null,
         completion_tokens: null,
-        error_message: "AIレビューの生成に失敗しました",
+        error_message: "ネットワークエラーが発生しました。再試行してください。",
         reviewed_at: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),

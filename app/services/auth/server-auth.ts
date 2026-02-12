@@ -1,5 +1,8 @@
 import type { User } from "@supabase/supabase-js";
-import { createServerSupabaseClient } from "@/app/services/api/supabase-server";
+import {
+  createAdminSupabaseClient,
+  createServerSupabaseClient,
+} from "@/app/services/api/supabase-server";
 import type { UserRoleType, UserStatusType } from "@/app/types";
 
 export interface ServerAuthResult {
@@ -12,14 +15,24 @@ export interface ServerAuthResult {
 
 // サーバーサイドで認証とユーザーステータスを確認
 export async function getServerAuth(): Promise<ServerAuthResult> {
-  // ポータル連携前は認証スキップしてダミーユーザーを返す
+  // ポータル連携前は認証スキップして実在するユーザーを返す
   // TODO: ポータルサービス連携時に削除すること
   if (process.env.SKIP_AUTH === "true") {
+    const supabase = await createAdminSupabaseClient();
+    const { data } = await supabase
+      .from("users")
+      .select("id, status, role")
+      .eq("is_deleted", false)
+      .eq("status", "active")
+      .order("id", { ascending: true })
+      .limit(1)
+      .single();
+
     return {
       user: null,
-      userId: -1,
-      userStatus: "active" as UserStatusType,
-      userRole: "admin" as UserRoleType,
+      userId: data?.id ?? null,
+      userStatus: (data?.status as UserStatusType) ?? "active",
+      userRole: (data?.role as UserRoleType) ?? "admin",
     };
   }
 

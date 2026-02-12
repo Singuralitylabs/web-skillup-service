@@ -1,7 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const MODEL_NAME = "gemini-2.0-flash";
+const MODEL_NAME = "gemini-2.5-flash";
 const MAX_CODE_LENGTH = 50000;
+const MAX_RETRIES = 2;
+const RETRY_BASE_DELAY_MS = 5000;
 
 const SYSTEM_PROMPT = `あなたはWeb技術講座のAI講師アシスタントです。受講生が提出した課題をレビューし、学習を促進するフィードバックを提供してください。
 
@@ -34,6 +36,17 @@ interface ReviewResult {
   modelUsed: string;
   promptTokens: number | null;
   completionTokens: number | null;
+}
+
+function isRateLimitError(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes("429") || error.message.includes("Too Many Requests");
+  }
+  return false;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function generateReview(
@@ -76,20 +89,49 @@ ${truncated}
 \`\`\``;
   }
 
-  const result = await model.generateContent(userPrompt);
-  const response = result.response;
-  const reviewContent = response.text();
+  let lastError: unknown;
 
-  const scoreMatch = reviewContent.match(/総合スコア:\s*(\d+)\s*\/\s*100/);
-  const overallScore = scoreMatch ? Number.parseInt(scoreMatch[1], 10) : null;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const result = await model.generateContent(userPrompt);
+      const response = result.response;
+      const reviewContent = response.text();
 
-  const usageMetadata = response.usageMetadata;
+      const scoreMatch = reviewContent.match(/総合スコア:\s*(\d+)\s*\/\s*100/);
+      const overallScore = scoreMatch ? Number.parseInt(scoreMatch[1], 10) : null;
 
-  return {
-    reviewContent,
-    overallScore,
-    modelUsed: MODEL_NAME,
-    promptTokens: usageMetadata?.promptTokenCount ?? null,
-    completionTokens: usageMetadata?.candidatesTokenCount ?? null,
-  };
+      const usageMetadata = response.usageMetadata;
+
+      return {
+        reviewContent,
+        overallScore,
+        modelUsed: MODEL_NAME,
+        promptTokens: usageMetadata?.promptTokenCount ?? null,
+        completionTokens: usageMetadata?.candidatesTokenCount ?? null,
+      };
+    } catch (error) {
+      lastError = error;
+
+      if (isRateLimitError(error) && attempt < MAX_RETRIES) {
+        const delay = RETRY_BASE_DELAY_MS * 2 ** attempt;
+        console.warn(
+          `Gemini APIレート制限 (試行 ${attempt + 1}/${MAX_RETRIES + 1})、${delay}ms後にリトライ`
+        );
+        await sleep(delay);
+        continue;
+      }
+
+      // レート制限以外のエラー or リトライ上限到達
+      break;
+    }
+  }
+
+  // エラーメッセージを分かりやすく変換
+  if (isRateLimitError(lastError)) {
+    throw new Error(
+      "Gemini APIの利用上限に達しました。しばらく時間を置いてから再試行してください。"
+    );
+  }
+
+  throw lastError;
 }
