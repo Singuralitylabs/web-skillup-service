@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/app/services/api/supabase-server";
+import { getApiAuth, getApiSupabaseClient } from "@/app/services/auth/api-auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,29 +18,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "URLが入力されていません" }, { status: 400 });
     }
 
-    const supabase = await createServerSupabaseClient();
-
-    // 認証チェック
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+    // 認証チェック（SKIP_AUTH対応）
+    const auth = await getApiAuth();
+    if (!auth.success) {
+      return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
 
-    // ユーザーIDの検証
-    const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("auth_id", user.id)
-      .eq("is_deleted", false)
-      .single();
-
-    if (userError || !userData || userData.id !== userId) {
+    // ユーザーIDを検証
+    if (auth.data.userId !== userId) {
       return NextResponse.json({ error: "権限がありません" }, { status: 403 });
     }
+
+    const supabase = await getApiSupabaseClient();
 
     // 提出を作成
     const { data: submission, error: insertError } = await supabase

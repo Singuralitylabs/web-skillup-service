@@ -114,6 +114,32 @@ export interface SubmissionWithUser extends Submission {
   content: LearningContent | null;
 }
 
+// AI Review types
+export type AIReviewStatus = "pending" | "processing" | "completed" | "failed";
+
+export interface AIReview {
+  id: number;
+  submission_id: number;
+  status: AIReviewStatus;
+  review_content: string | null;
+  overall_score: number | null;
+  model_used: string | null;
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  error_message: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubmissionWithContentAndReview extends SubmissionWithContent {
+  ai_review: AIReview | null;
+}
+
+export interface SubmissionWithUserAndReview extends SubmissionWithUser {
+  ai_review: AIReview | null;
+}
+
 // Progress summary types
 export interface ThemeProgress {
   theme: LearningTheme;
