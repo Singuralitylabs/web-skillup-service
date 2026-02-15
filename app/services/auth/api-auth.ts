@@ -39,7 +39,7 @@ export async function getApiAuth(): Promise<
   { success: true; data: ApiAuthResult } | { success: false; error: string; status: number }
 > {
   if (process.env.SKIP_AUTH === "true") {
-    if (process.env.NODE_ENV === "production") {
+    if (process.env.VERCEL_ENV === "production") {
       console.error("SKIP_AUTH は本番環境では使用できません");
       return { success: false, error: "認証設定エラー", status: 500 };
     }
@@ -77,7 +77,7 @@ export async function getApiAuth(): Promise<
  * SKIP_AUTH=true の場合はRLSをバイパスするAdminクライアントを返す
  */
 export async function getApiSupabaseClient() {
-  if (process.env.SKIP_AUTH === "true" && process.env.NODE_ENV !== "production") {
+  if (process.env.SKIP_AUTH === "true" && process.env.VERCEL_ENV !== "production") {
     return createAdminSupabaseClient();
   }
   return createServerSupabaseClient();
