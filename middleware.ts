@@ -1,7 +1,6 @@
 import { type CookieOptions, createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import { USER_STATUS } from "./app/constants/user";
-import { fetchUserStatusByIdInServer } from "./app/services/api/users-server";
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_PORTAL_URL || "http://localhost:3001";
 
@@ -67,13 +66,19 @@ export async function middleware(request: NextRequest) {
   }
 
   // 認証済みユーザーとして自分のユーザー情報を確認
-  const { status: userStatus, error: userError } = await fetchUserStatusByIdInServer({
-    authId: user.id,
-  });
+  // ミドルウェアではcookies()が使えないため、既存のsupabaseクライアントで直接クエリ
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("status")
+    .eq("auth_id", user.id)
+    .eq("is_deleted", false)
+    .maybeSingle();
 
   if (userError) {
     console.error("User data fetch error:", userError);
   }
+
+  const userStatus = userData?.status as string | null;
 
   // ユーザーステータスに応じてポータルにリダイレクト
   if (!userStatus) {
