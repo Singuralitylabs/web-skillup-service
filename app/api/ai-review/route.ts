@@ -73,6 +73,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "AIレビュー機能が設定されていません" }, { status: 503 });
     }
 
+    // 既に処理中のレビューがないか確認（重複リクエスト防止）
+    const { data: existingReview } = await supabase
+      .from("ai_reviews")
+      .select("id, status")
+      .eq("submission_id", submissionId)
+      .single();
+
+    if (existingReview?.status === "processing") {
+      return NextResponse.json(
+        {
+          message: "AIレビューは現在生成中です",
+          review: { id: existingReview.id, status: "processing" },
+        },
+        { status: 202 }
+      );
+    }
+
     // AIレビューレコードをUPSERT（pending）
     const reviewRecord = await upsertPendingAIReview(submissionId);
     if (!reviewRecord) {
@@ -80,7 +97,13 @@ export async function POST(request: NextRequest) {
     }
 
     // processing に更新
-    await updateAIReviewProcessing(reviewRecord.id);
+    const processingResult = await updateAIReviewProcessing(reviewRecord.id);
+    if (!processingResult) {
+      return NextResponse.json(
+        { error: "AIレビューのステータス更新に失敗しました" },
+        { status: 500 }
+      );
+    }
 
     // Gemini API 呼び出し
     try {

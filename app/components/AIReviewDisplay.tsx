@@ -92,36 +92,27 @@ export function AIReviewDisplay({
   // completed
   return (
     <div className="mt-4 border rounded-lg overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-4 flex items-center justify-between bg-muted/30 hover:bg-muted/50 transition-colors"
-      >
-        <div className="flex items-center gap-2">
+      <div className="w-full p-4 flex items-center justify-between bg-muted/30">
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+        >
           <Bot className="h-5 w-5 text-primary" />
           <span className="font-medium text-sm">AIレビュー</span>
           {review.overall_score != null && <ScoreBadge score={review.overall_score} />}
-        </div>
-        <div className="flex items-center gap-2">
-          {onRetry && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRetry();
-              }}
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          )}
           {isExpanded ? (
             <ChevronUp className="h-4 w-4 text-muted-foreground" />
           ) : (
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           )}
-        </div>
-      </button>
+        </button>
+        {onRetry && (
+          <Button variant="ghost" size="sm" onClick={onRetry}>
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
       {isExpanded && review.review_content && (
         <div className="p-4 border-t">
           <MarkdownRenderer content={review.review_content} className="text-sm" />

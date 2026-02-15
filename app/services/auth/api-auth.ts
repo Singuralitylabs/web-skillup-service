@@ -22,7 +22,13 @@ async function getSkipAuthUserId(): Promise<number> {
     .limit(1)
     .single();
 
-  return data?.id ?? 1;
+  if (!data?.id) {
+    throw new Error(
+      "SKIP_AUTH: アクティブなユーザーがDBに存在しません。シードデータを投入してください。"
+    );
+  }
+
+  return data.id;
 }
 
 /**
@@ -33,6 +39,10 @@ export async function getApiAuth(): Promise<
   { success: true; data: ApiAuthResult } | { success: false; error: string; status: number }
 > {
   if (process.env.SKIP_AUTH === "true") {
+    if (process.env.NODE_ENV === "production") {
+      console.error("SKIP_AUTH は本番環境では使用できません");
+      return { success: false, error: "認証設定エラー", status: 500 };
+    }
     const userId = await getSkipAuthUserId();
     return { success: true, data: { userId, authId: "skip-auth" } };
   }
@@ -67,7 +77,7 @@ export async function getApiAuth(): Promise<
  * SKIP_AUTH=true の場合はRLSをバイパスするAdminクライアントを返す
  */
 export async function getApiSupabaseClient() {
-  if (process.env.SKIP_AUTH === "true") {
+  if (process.env.SKIP_AUTH === "true" && process.env.NODE_ENV !== "production") {
     return createAdminSupabaseClient();
   }
   return createServerSupabaseClient();

@@ -53,6 +53,7 @@ export function SubmissionForm({ contentId, userId }: SubmissionFormProps) {
       } else {
         const errorData = await response.json().catch(() => null);
         const errorMsg = errorData?.error || "AIレビューの生成に失敗しました";
+        setMessage({ type: "error", text: errorMsg });
         setAiReview({
           id: 0,
           submission_id: submissionId,
@@ -69,6 +70,7 @@ export function SubmissionForm({ contentId, userId }: SubmissionFormProps) {
         });
       }
     } catch {
+      setMessage({ type: "error", text: "ネットワークエラーが発生しました。再試行してください。" });
       setAiReview({
         id: 0,
         submission_id: submissionId,

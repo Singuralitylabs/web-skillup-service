@@ -28,11 +28,21 @@ export async function getServerAuth(): Promise<ServerAuthResult> {
       .limit(1)
       .single();
 
+    if (!data) {
+      return {
+        user: null,
+        userId: null,
+        userStatus: null,
+        userRole: null,
+        error: "SKIP_AUTH: アクティブなユーザーがDBに存在しません",
+      };
+    }
+
     return {
       user: null,
-      userId: data?.id ?? null,
-      userStatus: (data?.status as UserStatusType) ?? "active",
-      userRole: (data?.role as UserRoleType) ?? "admin",
+      userId: data.id,
+      userStatus: data.status as UserStatusType,
+      userRole: data.role as UserRoleType,
     };
   }
 

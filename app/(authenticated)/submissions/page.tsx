@@ -1,7 +1,7 @@
 import { ClipboardList, Code, ExternalLink, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
 import { AIReviewStatusBadge } from "@/app/components/AIReviewDisplay";
-import { AIReviewDisplayServer } from "@/app/components/AIReviewDisplayServer";
+import { AIReviewDisplayClient } from "@/app/components/AIReviewDisplayClient";
 import { PageTitle } from "@/app/components/PageTitle";
 import { fetchSubmissionsWithReviewsByUserId } from "@/app/services/api/ai-review-server";
 import { getServerAuth } from "@/app/services/auth/server-auth";
@@ -94,7 +94,7 @@ export default async function SubmissionsPage() {
                     )}
 
                     {submission.ai_review && (
-                      <AIReviewDisplayServer review={submission.ai_review} />
+                      <AIReviewDisplayClient review={submission.ai_review} />
                     )}
                   </div>
                 </div>

@@ -36,8 +36,7 @@ CREATE TRIGGER ai_reviews_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_ai_reviews_updated_at();
 
--- インデックス
-CREATE INDEX idx_ai_reviews_submission_id ON ai_reviews(submission_id);
+-- インデックス（submission_id は UNIQUE 制約により暗黙のユニークインデックスが存在するため省略）
 CREATE INDEX idx_ai_reviews_status ON ai_reviews(status);
 
 -- =====================================================

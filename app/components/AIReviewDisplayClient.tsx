@@ -3,10 +3,10 @@
 import type { AIReview } from "@/app/types";
 import { AIReviewDisplay } from "./AIReviewDisplay";
 
-interface AIReviewDisplayServerProps {
+interface AIReviewDisplayClientProps {
   review: AIReview;
 }
 
-export function AIReviewDisplayServer({ review }: AIReviewDisplayServerProps) {
+export function AIReviewDisplayClient({ review }: AIReviewDisplayClientProps) {
   return <AIReviewDisplay review={review} defaultExpanded={false} />;
 }

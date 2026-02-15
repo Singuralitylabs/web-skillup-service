@@ -133,5 +133,10 @@ ${truncated}
     );
   }
 
-  throw lastError;
+  if (lastError instanceof Error) {
+    throw lastError;
+  }
+  throw new Error(
+    lastError ? String(lastError) : "Gemini APIリクエスト中に不明なエラーが発生しました。"
+  );
 }
