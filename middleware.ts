@@ -18,7 +18,10 @@ function shouldSkipMiddleware(pathname: string): boolean {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
     pathname.includes(".") ||
-    pathname === "/favicon.ico"
+    pathname === "/favicon.ico" ||
+    pathname === "/login" ||
+    pathname === "/pending" ||
+    pathname === "/rejected"
   );
 }
 
@@ -81,6 +84,14 @@ export async function middleware(request: NextRequest) {
     // 未認証の場合はポータルのログインページにリダイレクト
     if (error || !user) {
       const redirectUrl = new URL("/login", PORTAL_URL);
+      // リダイレクト先が自身のオリジンと同じ場合はループ防止のためスキップ
+      if (redirectUrl.origin === request.nextUrl.origin) {
+        console.error(
+          "[middleware] PORTAL_URL is same as current origin, skipping redirect to prevent loop:",
+          PORTAL_URL
+        );
+        return response;
+      }
       redirectUrl.searchParams.set("redirect", request.url);
       return NextResponse.redirect(redirectUrl);
     }
