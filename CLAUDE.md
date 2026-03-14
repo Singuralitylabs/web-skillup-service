@@ -90,6 +90,18 @@ app/
 - `SUPABASE_PROJECT_ID` — Supabase CLI操作用
 - `NEXT_PUBLIC_PORTAL_URL` — ポータルサービスURL（デフォルト: `http://localhost:3001`）
 
+### TODO: クロスドメイン認証の実装
+
+現在、Vercel環境では認証を一時的にスキップしている（**方法C: SKIP_AUTH**）。
+本番運用前に以下の対応が必要:
+
+1. **トークンリレー方式（方法A）を実装する**: ポータルがリダイレクト時にSupabaseセッショントークンをURLで渡し、スキルアップサービス側で `setSession()` を呼んでセッションを確立する
+2. **Vercelの環境変数を削除する**: トークンリレー実装後、以下の一時的な環境変数を削除すること
+   - `SKIP_AUTH=true`（middleware用）
+   - `NEXT_PUBLIC_SKIP_AUTH=true`（AuthLayout用）
+
+**背景**: 両サービスは異なるドメイン（Vercel）で動作するため、ポータルで設定されたSupabase cookieはスキルアップサービス側では読めない。トークンリレーでクロスドメインのセッション共有を実現する必要がある。
+
 ### データベースマイグレーション
 
 SQLマイグレーションは `supabase/migrations/` に連番で管理:
