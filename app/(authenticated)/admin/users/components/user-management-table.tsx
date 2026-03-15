@@ -122,7 +122,9 @@ export function UserManagementTable({ users }: { users: UserType[] }) {
                       <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(user.created_at).toLocaleDateString("ja-JP")}
+                      {user.created_at
+                        ? new Date(user.created_at).toLocaleDateString("ja-JP")
+                        : "-"}
                     </td>
                     <td className="px-4 py-3">
                       {isLoading ? (
