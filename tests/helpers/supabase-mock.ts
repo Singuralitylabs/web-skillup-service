@@ -15,6 +15,7 @@ export function createQueryBuilder(result: { data: unknown; error: unknown }) {
     single: vi.fn().mockResolvedValue(result),
     maybeSingle: vi.fn().mockResolvedValue(result),
     // リスト取得は await builder そのものを解決する
+    // biome-ignore lint/suspicious/noThenProperty: Supabase クエリビルダーの thenable を再現するため意図的に定義
     then: (onfulfilled: (v: typeof result) => unknown, onrejected?: (r: unknown) => unknown) =>
       Promise.resolve(result).then(onfulfilled, onrejected),
     catch: (onrejected: (r: unknown) => unknown) => Promise.resolve(result).catch(onrejected),

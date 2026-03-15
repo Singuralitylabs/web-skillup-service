@@ -3,7 +3,6 @@ import { createMockSupabaseClient } from "@/tests/helpers/supabase-mock";
 
 vi.mock("@/app/services/api/supabase-server");
 
-import { createServerSupabaseClient } from "@/app/services/api/supabase-server";
 import {
   fetchContentsByWeekId,
   fetchPhaseById,
@@ -11,6 +10,7 @@ import {
   fetchUserProgressByContentId,
   fetchUserProgressByContentIds,
 } from "@/app/services/api/learning-server";
+import { createServerSupabaseClient } from "@/app/services/api/supabase-server";
 
 const dbError = { message: "db error", code: "PGRST001" };
 

@@ -4,10 +4,7 @@ import { createQueryBuilder } from "@/tests/helpers/supabase-mock";
 vi.mock("@/app/services/api/supabase-client");
 
 import { createClientSupabaseClient } from "@/app/services/api/supabase-client";
-import {
-  fetchUserIdByAuthId,
-  fetchUserStatusById,
-} from "@/app/services/api/users-client";
+import { fetchUserIdByAuthId, fetchUserStatusById } from "@/app/services/api/users-client";
 
 const dbError = { message: "db error", code: "PGRST001" };
 const authId = "auth-uuid-001";
@@ -22,7 +19,9 @@ beforeEach(() => {
 describe("fetchUserStatusById", () => {
   it("正常時、ユーザーのステータスを返す", async () => {
     const mockClient = {
-      from: vi.fn().mockReturnValue(createQueryBuilder({ data: { status: "active" }, error: null })),
+      from: vi
+        .fn()
+        .mockReturnValue(createQueryBuilder({ data: { status: "active" }, error: null })),
     };
     vi.mocked(createClientSupabaseClient).mockReturnValue(mockClient as never);
 
@@ -34,9 +33,9 @@ describe("fetchUserStatusById", () => {
 
   it("rejected ステータスのユーザーを正しく返す", async () => {
     const mockClient = {
-      from: vi.fn().mockReturnValue(
-        createQueryBuilder({ data: { status: "rejected" }, error: null }),
-      ),
+      from: vi
+        .fn()
+        .mockReturnValue(createQueryBuilder({ data: { status: "rejected" }, error: null })),
     };
     vi.mocked(createClientSupabaseClient).mockReturnValue(mockClient as never);
 

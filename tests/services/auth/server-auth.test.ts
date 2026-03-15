@@ -123,9 +123,7 @@ describe("getServerAuth", () => {
 
   describe("例外発生時", () => {
     it("createServerSupabaseClient が例外をスローした場合、エラーメッセージ付きで全フィールドが null の結果を返す", async () => {
-      vi.mocked(createServerSupabaseClient).mockRejectedValue(
-        new Error("unexpected error"),
-      );
+      vi.mocked(createServerSupabaseClient).mockRejectedValue(new Error("unexpected error"));
 
       const result = await getServerAuth();
 
