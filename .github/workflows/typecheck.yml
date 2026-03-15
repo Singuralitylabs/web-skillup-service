@@ -1,24 +1,24 @@
-name: Vitest Unit Tests
+name: TypeScript Type Check
 
 on:
   push:
     paths:
       - "app/**"
       - "tests/**"
-      - "vitest.config.ts"
+      - "tsconfig.json"
       - "package.json"
       - "bun.lock"
   pull_request:
     paths:
       - "app/**"
       - "tests/**"
-      - "vitest.config.ts"
+      - "tsconfig.json"
       - "package.json"
       - "bun.lock"
   workflow_dispatch:
 
 jobs:
-  test:
+  typecheck:
     runs-on: ubuntu-latest
 
     steps:
@@ -33,5 +33,5 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Run unit tests
-        run: bun run test
+      - name: Run type check
+        run: bunx tsc --noEmit
