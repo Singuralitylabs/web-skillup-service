@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const MODEL_NAME = "gemini-2.5-flash";
-const MAX_CODE_LENGTH = 50000;
+const MAX_CODE_LENGTH = 8000;
 const MAX_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 5000;
 
