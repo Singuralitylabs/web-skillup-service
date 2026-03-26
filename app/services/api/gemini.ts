@@ -57,13 +57,17 @@ export async function generateReview(
     model: MODEL_NAME,
     systemInstruction: SYSTEM_PROMPT,
     generationConfig: {
-      maxOutputTokens: 800,
+      maxOutputTokens: 1500,
+      // gemini-2.5-flash は思考モデルのため、thinking tokens が出力トークン枠を消費する。
+      // レビュータスクには思考不要なので無効化してレスポンス出力に全トークンを確保する。
+      // @ts-expect-error: thinkingConfig は @google/generative-ai@0.24.1 の型定義に未追加だがランタイムでは有効
+      thinkingConfig: {
+        thinkingBudget: 0,
+      },
     },
   });
 
-  const referenceSection = referenceAnswer
-    ? `\n## 模範回答\n${referenceAnswer}\n`
-    : "";
+  const referenceSection = referenceAnswer ? `\n## 模範回答\n${referenceAnswer}\n` : "";
 
   let userPrompt: string;
   if (submissionType === "url") {
