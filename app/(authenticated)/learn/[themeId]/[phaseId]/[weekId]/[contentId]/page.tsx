@@ -103,6 +103,18 @@ export default async function ContentPage({ params }: PageProps) {
             <div>
               <MarkdownRenderer content={content.exercise_instructions} />
 
+              {content.hint && (
+                <details className="mt-4 rounded-lg border border-border">
+                  <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground list-none flex items-center gap-2">
+                    <span className="text-base">💡</span>
+                    ヒントを見る
+                  </summary>
+                  <div className="border-t border-border px-4 py-3 text-sm text-muted-foreground whitespace-pre-wrap">
+                    {content.hint}
+                  </div>
+                </details>
+              )}
+
               {userId && (
                 <div className="mt-8">
                   <Separator className="mb-6" />
