@@ -1,6 +1,7 @@
 "use client";
 
 import { Code, Link as LinkIcon, Loader2, Send } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AIReviewDisplay } from "@/app/components/AIReviewDisplay";
 import { CodeEditor, type CodeLanguage } from "@/app/components/CodeEditor";
@@ -23,6 +24,7 @@ export function SubmissionForm({
   allowedSubmissionTypes,
   codeLanguage,
 }: SubmissionFormProps) {
+  const router = useRouter();
   const [submissionType, setSubmissionType] = useState<SubmissionType>(
     allowedSubmissionTypes === "url" ? "url" : "code"
   );
@@ -137,6 +139,7 @@ export function SubmissionForm({
         const submissionId = data.submission.id;
         setLastSubmissionId(submissionId);
         requestAIReview(submissionId);
+        router.refresh();
       } else {
         const data = await response.json();
         setMessage({ type: "error", text: data.error || "提出に失敗しました" });
