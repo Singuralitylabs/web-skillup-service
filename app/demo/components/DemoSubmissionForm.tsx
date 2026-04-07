@@ -1,6 +1,6 @@
 "use client";
 
-import { Code, Link as LinkIcon, Loader2, Send } from "lucide-react";
+import { Bot, Code, FlaskConical, Link as LinkIcon, Loader2, Send } from "lucide-react";
 import { useState } from "react";
 import { AIReviewDisplay } from "@/app/components/AIReviewDisplay";
 import { CodeEditor, type CodeLanguage } from "@/app/components/CodeEditor";
@@ -10,6 +10,40 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// デモ用のサンプルAIレビュー（実際のAPI呼び出しは行わない）
+const SAMPLE_REVIEW: AIReview = {
+  id: 0,
+  submission_id: 0,
+  status: "completed",
+  review_content: `## 総評
+
+提出内容を拝見しました。課題の要件を理解した上で取り組まれており、全体的な方向性は正しいです。
+
+## 良い点
+
+- コードの基本構造が適切に組み立てられています
+- 変数名や関数名が処理内容を反映しており、可読性が高いです
+- 処理の流れが論理的に組み立てられています
+
+## 改善できる点
+
+- エラーハンドリングを追加することで、より堅牢なコードになります
+- 処理を小さな関数に分割することで、再利用性と保守性が向上します
+- コメントを適切に追加することで、コードの意図がより明確になります
+
+## まとめ
+
+基礎的な実装はできています。本番環境では提出されたコードの内容に基づいた詳細なフィードバックをお届けします。`,
+  overall_score: 75,
+  model_used: "sample",
+  prompt_tokens: null,
+  completion_tokens: null,
+  error_message: null,
+  reviewed_at: new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+};
+
 interface DemoSubmissionFormProps {
   exerciseInstructions: string;
   referenceAnswer: string | null;
@@ -18,8 +52,6 @@ interface DemoSubmissionFormProps {
 }
 
 export function DemoSubmissionForm({
-  exerciseInstructions,
-  referenceAnswer,
   allowedSubmissionTypes,
   codeLanguage,
 }: DemoSubmissionFormProps) {
@@ -29,7 +61,6 @@ export function DemoSubmissionForm({
   const [codeContent, setCodeContent] = useState("");
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [aiReview, setAiReview] = useState<AIReview | null>(null);
   const [isReviewLoading, setIsReviewLoading] = useState(false);
 
@@ -37,88 +68,14 @@ export function DemoSubmissionForm({
     e.preventDefault();
     setIsLoading(true);
     setIsReviewLoading(true);
-    setMessage(null);
     setAiReview(null);
 
-    const submissionContent = submissionType === "code" ? codeContent : url;
+    // API呼び出しを行わず、サンプルレビューを表示する
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    try {
-      const response = await fetch("/api/demo/ai-review", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          exerciseInstructions,
-          referenceAnswer,
-          submissionContent,
-          submissionType,
-        }),
-      });
-
-      setIsLoading(false);
-
-      if (response.ok) {
-        const data = await response.json();
-        setAiReview({
-          id: 0,
-          submission_id: 0,
-          status: data.review.status,
-          review_content: data.review.review_content,
-          overall_score: data.review.overall_score,
-          model_used: data.review.model_used,
-          prompt_tokens: null,
-          completion_tokens: null,
-          error_message: null,
-          reviewed_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-        setMessage({ type: "success", text: "AIレビューが完了しました。" });
-      } else if (response.status === 429) {
-        const errorData = await response.json().catch(() => null);
-        setMessage({
-          type: "error",
-          text: errorData?.error ?? "リクエスト上限に達しました。しばらくお待ちください。",
-        });
-      } else {
-        const errorData = await response.json().catch(() => null);
-        const errorMsg = errorData?.error ?? "AIレビューの生成に失敗しました";
-        setMessage({ type: "error", text: errorMsg });
-        setAiReview({
-          id: 0,
-          submission_id: 0,
-          status: "failed",
-          review_content: null,
-          overall_score: null,
-          model_used: null,
-          prompt_tokens: null,
-          completion_tokens: null,
-          error_message: errorMsg,
-          reviewed_at: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-      }
-    } catch {
-      setIsLoading(false);
-      const errorMsg = "ネットワークエラーが発生しました。再試行してください。";
-      setMessage({ type: "error", text: errorMsg });
-      setAiReview({
-        id: 0,
-        submission_id: 0,
-        status: "failed",
-        review_content: null,
-        overall_score: null,
-        model_used: null,
-        prompt_tokens: null,
-        completion_tokens: null,
-        error_message: errorMsg,
-        reviewed_at: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-    } finally {
-      setIsReviewLoading(false);
-    }
+    setIsLoading(false);
+    setIsReviewLoading(false);
+    setAiReview(SAMPLE_REVIEW);
   };
 
   const isValid =
@@ -181,14 +138,6 @@ export function DemoSubmissionForm({
           </div>
         )}
 
-        {message && (
-          <Alert variant={message.type === "error" ? "destructive" : "default"}>
-            <AlertDescription className={message.type === "success" ? "text-success" : ""}>
-              {message.text}
-            </AlertDescription>
-          </Alert>
-        )}
-
         <Button type="submit" disabled={!isValid || isLoading} className="w-full">
           {isLoading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
@@ -200,6 +149,19 @@ export function DemoSubmissionForm({
           )}
         </Button>
       </form>
+
+      {aiReview && (
+        <Alert className="border-primary/30 bg-primary/5">
+          <Bot className="h-4 w-4 text-primary" />
+          <AlertDescription className="flex items-center gap-2">
+            <FlaskConical className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span>
+              <strong>これはサンプルレビューです。</strong>
+              本番環境では提出内容に基づいた詳細なAIフィードバックが届きます。
+            </span>
+          </AlertDescription>
+        </Alert>
+      )}
 
       <AIReviewDisplay review={aiReview} isLoading={isReviewLoading} defaultExpanded={true} />
     </div>
