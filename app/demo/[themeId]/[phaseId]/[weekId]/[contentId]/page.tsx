@@ -51,10 +51,7 @@ export default async function DemoContentPage({ params }: PageProps) {
     notFound();
   }
 
-  if (
-    content.week?.phase?.id !== phaseIdNum ||
-    content.week?.phase?.theme?.id !== themeIdNum
-  ) {
+  if (content.week?.phase?.id !== phaseIdNum || content.week?.phase?.theme?.id !== themeIdNum) {
     notFound();
   }
 
