@@ -1,0 +1,134 @@
+import { Calendar, Lock } from "lucide-react";
+import { redirect } from "next/navigation";
+import { PageTitle } from "@/app/components/PageTitle";
+import {
+  fetchDemoContext,
+  fetchDemoWeeksWithContentsByPhaseId,
+} from "@/app/services/api/demo-learning-server";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { DemoContentList } from "../../components/DemoContentList";
+import { DemoProgressBar } from "../../components/DemoProgressBar";
+
+interface PageProps {
+  params: Promise<{ themeId: string; phaseId: string }>;
+}
+
+export default async function DemoPhasePage({ params }: PageProps) {
+  const { themeId, phaseId } = await params;
+  const themeIdNum = Number.parseInt(themeId, 10);
+  const phaseIdNum = Number.parseInt(phaseId, 10);
+
+  const { data: ctx } = await fetchDemoContext();
+
+  if (!ctx) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-20">
+        <p className="text-muted-foreground">デモコンテンツが準備中です。</p>
+      </div>
+    );
+  }
+
+  if (ctx.theme.id !== themeIdNum || ctx.phase.id !== phaseIdNum) {
+    redirect(`/demo/${ctx.theme.id}/${ctx.phase.id}`);
+  }
+
+  const { data: weeks } = await fetchDemoWeeksWithContentsByPhaseId(ctx.phase.id);
+
+  const demoContentIds = weeks
+    ?.find((w) => w.id === ctx.week.id)
+    ?.contents.map((c) => c.id) ?? [];
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <PageTitle
+        title={ctx.phase.name}
+        description={ctx.phase.description ?? undefined}
+        breadcrumbs={[
+          { label: "デモ学習", href: "/demo" },
+          { label: ctx.theme.name, href: `/demo/${ctx.theme.id}` },
+          { label: ctx.phase.name },
+        ]}
+      />
+
+      <DemoProgressBar contentIds={demoContentIds} />
+
+      {!weeks || weeks.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">コンテンツはまだ登録されていません。</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {weeks.map((week) => {
+            const isDemoWeek = week.id === ctx.week.id;
+
+            return (
+              <div key={week.id}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div
+                    className={`p-2 rounded-full ${
+                      isDemoWeek
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {isDemoWeek ? (
+                      <Calendar className="h-5 w-5" />
+                    ) : (
+                      <Lock className="h-5 w-5" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h2
+                      className={`text-base font-semibold ${
+                        isDemoWeek ? "" : "text-muted-foreground"
+                      }`}
+                    >
+                      {week.name}
+                    </h2>
+                    {week.description && (
+                      <p className="text-sm text-muted-foreground">{week.description}</p>
+                    )}
+                  </div>
+                  {isDemoWeek ? (
+                    <Badge variant="outline" className="text-xs shrink-0">
+                      デモ限定
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="text-xs shrink-0">
+                      ログイン後に利用可
+                    </Badge>
+                  )}
+                </div>
+
+                {isDemoWeek ? (
+                  week.contents.length > 0 ? (
+                    <DemoContentList
+                      contents={week.contents}
+                      themeId={ctx.theme.id}
+                      phaseId={ctx.phase.id}
+                      weekId={week.id}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground ml-12">
+                      コンテンツはまだ登録されていません。
+                    </p>
+                  )
+                ) : (
+                  <div className="ml-5 border-l-2 border-border pl-5 py-2 text-sm text-muted-foreground">
+                    {week.contents.length > 0
+                      ? `${week.contents.length} 件のコンテンツがあります。ログインしてアクセスしてください。`
+                      : "コンテンツはまだ登録されていません。"}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
