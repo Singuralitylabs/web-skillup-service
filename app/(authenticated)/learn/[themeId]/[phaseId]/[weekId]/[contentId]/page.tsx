@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { AIReviewDisplay } from "@/app/components/AIReviewDisplay";
 import { MarkdownRenderer } from "@/app/components/MarkdownRenderer";
 import { PageTitle } from "@/app/components/PageTitle";
-import { PdfSlideViewer } from "@/app/components/PdfSlideViewer";
+import { PdfSlideViewerNoSSR as PdfSlideViewer } from "@/app/components/PdfSlideViewerNoSSR";
 import { YouTubeEmbed } from "@/app/components/YouTubeEmbed";
 import { fetchCompletedAIReviewByContentId } from "@/app/services/api/ai-review-server";
 import {
