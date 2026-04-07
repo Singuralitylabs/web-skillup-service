@@ -45,11 +45,7 @@ export default async function DemoThemePage({ params }: PageProps) {
       ) : (
         <div className="grid gap-4">
           {phases.map((phase) => (
-            <Link
-              key={phase.id}
-              href={`/demo/${themeIdNum}/${phase.id}`}
-              className="block group"
-            >
+            <Link key={phase.id} href={`/demo/${themeIdNum}/${phase.id}`} className="block group">
               <Card className="transition-all hover:shadow-md hover:border-primary/20">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
@@ -62,9 +58,7 @@ export default async function DemoThemePage({ params }: PageProps) {
                           {phase.name}
                         </h2>
                         {phase.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {phase.description}
-                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">{phase.description}</p>
                         )}
                       </div>
                     </div>

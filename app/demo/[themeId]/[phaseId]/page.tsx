@@ -35,8 +35,7 @@ export default async function DemoPhasePage({ params }: PageProps) {
   const demoWeekId = ctx && ctx.phase.id === phaseIdNum ? ctx.week.id : null;
 
   // プログレスバー用: デモWeekのコンテンツIDのみ
-  const demoContentIds =
-    weeks?.find((w) => w.id === demoWeekId)?.contents.map((c) => c.id) ?? [];
+  const demoContentIds = weeks?.find((w) => w.id === demoWeekId)?.contents.map((c) => c.id) ?? [];
 
   return (
     <div className="max-w-4xl mx-auto">

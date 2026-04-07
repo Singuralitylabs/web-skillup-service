@@ -1,8 +1,8 @@
 "use client";
 
-import { useDemoProgress } from "../hooks/useDemoProgress";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useDemoProgress } from "../hooks/useDemoProgress";
 
 interface DemoProgressBarProps {
   contentIds: number[];

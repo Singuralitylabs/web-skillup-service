@@ -1,8 +1,8 @@
 "use client";
 
 import { CheckCircle, Circle } from "lucide-react";
-import { useDemoProgress } from "../hooks/useDemoProgress";
 import { Button } from "@/components/ui/button";
+import { useDemoProgress } from "../hooks/useDemoProgress";
 
 interface DemoCompleteButtonProps {
   contentId: number;

@@ -69,10 +69,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json(
-      { error: "AIレビュー機能が設定されていません" },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: "AIレビュー機能が設定されていません" }, { status: 503 });
   }
 
   try {
@@ -93,8 +90,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "AIレビュー生成中にエラーが発生しました";
+    const message = err instanceof Error ? err.message : "AIレビュー生成中にエラーが発生しました";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

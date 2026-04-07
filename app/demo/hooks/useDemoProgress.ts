@@ -27,10 +27,7 @@ function writeToStorage(progress: ProgressMap): void {
 export function useDemoProgress() {
   const [progress, setProgress] = useState<ProgressMap>(() => readFromStorage());
 
-  const isCompleted = useCallback(
-    (contentId: number) => progress[contentId] ?? false,
-    [progress]
-  );
+  const isCompleted = useCallback((contentId: number) => progress[contentId] ?? false, [progress]);
 
   const toggleComplete = useCallback((contentId: number) => {
     setProgress((prev) => {
