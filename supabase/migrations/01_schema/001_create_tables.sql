@@ -3,31 +3,8 @@
 -- =====================================================
 
 -- =====================================================
--- ヘルパー関数
+-- ヘルパー関数（usersテーブルに依存しないもの）
 -- =====================================================
-
--- RLSポリシー用: 認証ユーザーのロールを返す
--- SECURITY DEFINERでRLSをバイパスし無限再帰を防止
-CREATE OR REPLACE FUNCTION public.get_user_role()
-RETURNS TEXT
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = public
-STABLE
-AS $$
-  SELECT role::text FROM users WHERE auth_id = auth.uid() AND is_deleted = false LIMIT 1;
-$$;
-
--- RLSポリシー用: 認証ユーザーの内部IDを返す
-CREATE OR REPLACE FUNCTION public.get_user_id()
-RETURNS INTEGER
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = public
-STABLE
-AS $$
-  SELECT id FROM users WHERE auth_id = auth.uid() AND is_deleted = false LIMIT 1;
-$$;
 
 -- updated_at 自動更新トリガー関数
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -158,6 +135,34 @@ CREATE TABLE IF NOT EXISTS ai_reviews (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- =====================================================
+-- RLSポリシー用ヘルパー関数（usersテーブル作成後に定義）
+-- LANGUAGE sql はコンパイル時にテーブルの存在を検証するため、
+-- usersテーブルより後に定義する必要がある
+-- =====================================================
+
+-- 認証ユーザーのロールを返す（SECURITY DEFINERでRLSバイパスし無限再帰を防止）
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS TEXT
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT role::text FROM users WHERE auth_id = auth.uid() AND is_deleted = false LIMIT 1;
+$$;
+
+-- 認証ユーザーの内部IDを返す
+CREATE OR REPLACE FUNCTION public.get_user_id()
+RETURNS INTEGER
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT id FROM users WHERE auth_id = auth.uid() AND is_deleted = false LIMIT 1;
+$$;
 
 -- =====================================================
 -- updated_at トリガー
